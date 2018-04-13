@@ -27,10 +27,121 @@ def generate_state(n=8):
 # working on this
 def check_attack(space,i,j):
 	attacks = []
-	# if corner
-	#if(i == 0 and j == 0):
+	n = len(space)
+	# START OF CORNER CASES #############################
+	# left top
+	if(i == 0 and j == 0):
+		# sides
+		for x in range(1,n):
+			# check right
+			if(space[i][j+x] == 1):
+				attacks.append([i,j,i,j+x])
+				break # stop looking
+		# check down
+		for x in range(1,n):
+			# check right
+			if(space[i+x][j] == 1):
+				attacks.append([i,j,i+x,j])
+				break # stop looking
+		# diag
+		for x in range(1,n):
+			# check right
+			if(space[i+x][j+x] == 1):
+				attacks.append([i,j,i+x,j+x])
+				break # stop looking
+	#top right #############################
+	elif(i == 0 and j == n-1):
+		# sides
+		for x in range(1,n):
+			# check left
+			if(space[i][j-x] == 1):
+				attacks.append([i,j,i,j-x])
+				break # stop looking
+		# check down
+		for x in range(1,n):
+			# check right
+			if(space[i+x][j] == 1):
+				attacks.append([i,j,i+x,j])
+				break # stop looking
+		# diag
+		for x in range(1,n):
+			# check right
+			if(space[i+x][j-x] == 1):
+				attacks.append([i,j,i+x,j-x])
+				break # stop looking
+	# left bottom #############################
+	elif(i == n-1 and j == 0):
+		# sides
+		for x in range(1,n):
+			# check right
+			if(space[i][j+x] == 1):
+				attacks.append([i,j,i,j+x])
+				break # stop looking
+		# check up
+		for x in range(1,n):
+			# check right
+			if(space[i-x][j] == 1):
+				attacks.append([i,j,i-x,j])
+				break # stop looking
+		# diag
+		for x in range(1,n):
+			# check right
+			if(space[i-x][j+x] == 1):
+				attacks.append([i,j,i-x,j+x])
+				break # stop looking
+	
+	# right bottom #############################
+	elif(i == n-1 and j == n-1):
+		# sides
+		for x in range(1,n):
+			# check left
+			if(space[i][j-x] == 1):
+				attacks.append([i,j,i,j-x])
+				break # stop looking
+		# check up
+		for x in range(1,n):
+			# check right
+			if(space[i-x][j] == 1):
+				attacks.append([i,j,i-x,j])
+				break # stop looking
+		# diag
+		for x in range(1,n):
+			# check right
+			if(space[i-x][j-x] == 1):
+				attacks.append([i,j,i-x,j-x])
+				break # stop looking
+	# END OF CORNERS #############################
+	
+	# STAT OF SIDES
+	# left side
+	elif(i == 0 and (j > 0 and j < n-1)):
+		
+		# check up
+		for x in range(i,n-i-n): # move for only the squares in the board
+			if(space[i-x][j] == 1):
+				attacks.append([i,j,i-x,j])
+				break # stop looking
+		# check down
+		for x in range(i,n): # move for only the squares in the board
+			if(space[i+x][j] == 1):
+				attacks.append([i,j,i+x,j])
+				break # stop looking
 
-	# if side
+		# check down diag
+		for x in range(i,n): # move for only the squares in the board
+			if(space[i+x][j] == 1):
+				attacks.append([i,j,i+x,j+x])
+				break # stop looking
+
+		# check up diag
+		for x in range(i,n-i-n): # move for only the squares in the board
+			if(space[i-x][j-x] == 1):
+				attacks.append([i,j,i-x,j-x])
+				break # stop looking
+	# top side
+	# right side
+	# bottom side
+
 	# if center
 
 # setup the fitness function
@@ -60,7 +171,7 @@ def cal_fitness(space):
 		line = ''
 
 	print(board)
-	print(np.unique(temp_space))
+	print(np.unique(attk_pairs))
 	return fit
 
 if __name__ == '__main__':
