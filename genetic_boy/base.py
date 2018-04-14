@@ -15,7 +15,7 @@ import numpy as np
 # this will generate a state of n queens
 def generate_state(n=8):
 	# Start with 8 as the normal
-	space = [0 for i in range(0,n)]
+	space = [0 for i in range(n)]
 
 	# now populate the state randomly
 	#  space at i can be from 0 to n
@@ -24,8 +24,26 @@ def generate_state(n=8):
 	return space
 # thats it nothing special
 
+# generate a board based on a state
+
+# print a board based on a temp_space
+def print_board(space):
+	n = len(space)
+	line = ''
+	board = ''
+	for j in range(0,n): # show the board for now
+		for i in range(0,n):
+			line += str(space[i][j]) + ' '
+		board += line + '\n'
+		line = ''
+	print(board)
 # working on this
 def check_attack(space,i,j):
+	print('--------------')
+	print('queen[{},{}]'.format(i,j))
+	
+	print(space[i][j])
+	#print_board(space)
 	attacks = []
 	n = len(space)
 	# START OF CORNER CASES #############################
@@ -39,13 +57,13 @@ def check_attack(space,i,j):
 				break # stop looking
 		# check down
 		for x in range(1,n):
-			# check right
+			# check down
 			if(space[i+x][j] == 1):
 				attacks.append([i,j,i+x,j])
 				break # stop looking
 		# diag
 		for x in range(1,n):
-			# check right
+			# check diag down right
 			if(space[i+x][j+x] == 1):
 				attacks.append([i,j,i+x,j+x])
 				break # stop looking
@@ -59,13 +77,13 @@ def check_attack(space,i,j):
 				break # stop looking
 		# check down
 		for x in range(1,n):
-			# check right
+			# check down
 			if(space[i+x][j] == 1):
 				attacks.append([i,j,i+x,j])
 				break # stop looking
 		# diag
 		for x in range(1,n):
-			# check right
+			# check diag down right
 			if(space[i+x][j-x] == 1):
 				attacks.append([i,j,i+x,j-x])
 				break # stop looking
@@ -85,7 +103,7 @@ def check_attack(space,i,j):
 				break # stop looking
 		# diag
 		for x in range(1,n):
-			# check right
+			# check diag up right
 			if(space[i-x][j+x] == 1):
 				attacks.append([i,j,i-x,j+x])
 				break # stop looking
@@ -100,56 +118,77 @@ def check_attack(space,i,j):
 				break # stop looking
 		# check up
 		for x in range(1,n):
-			# check right
+			# check up
 			if(space[i-x][j] == 1):
 				attacks.append([i,j,i-x,j])
 				break # stop looking
 		# diag
 		for x in range(1,n):
-			# check right
+			# check diag up left
 			if(space[i-x][j-x] == 1):
 				attacks.append([i,j,i-x,j-x])
 				break # stop looking
 	# END OF CORNERS #############################
 	
-	# STAT OF SIDES
-	# left side
-	elif(i == 0 and (j > 0 and j < n-1)):
-		
+	# SIDES
+
+	#  LEFT SIDE
+	elif((i > 0 and i < n-1) and j == 0):
+		print('check right')
+		for x in range(1,n):
+			print(x)
+			# check right
+			if(space[i][x] == 1):
+				attacks.append([i,j,i,x])
+				break # stop looking
+		# check down
+		print('check down')
+		for x in range(i+1,n):
+			# check down
+			print(x)
+			if(space[x][j] == 1):
+				attacks.append([i,j,x,j])
+				break # stop looking
 		# check up
-		for x in range(i,n-i-n): # move for only the squares in the board
+		print('check up')
+		for x in range(1,n-(n-i)): 
+			# check up
+			print(x)
 			if(space[i-x][j] == 1):
 				attacks.append([i,j,i-x,j])
 				break # stop looking
-		# check down
-		for x in range(i,n): # move for only the squares in the board
-			if(space[i+x][j] == 1):
-				attacks.append([i,j,i+x,j])
+		# diag
+		print('check diag down right')
+		for x in range(i+1,n):
+			print(x)
+			# check diag down right
+			if(space[x][j+x] == 1):
+				attacks.append([i,j,x,j+x])
 				break # stop looking
-
-		# check down diag
-		for x in range(i,n): # move for only the squares in the board
-			if(space[i+x][j] == 1):
-				attacks.append([i,j,i+x,j+x])
+		#
+		print('check diag up right')
+		for x in range(1,n-(n-i)):
+			print(x)
+			# check diag up right
+			if(space[i-x][j+x] == 1):
+				attacks.append([i,j,i-x,j+x])
 				break # stop looking
-
-		# check up diag
-		for x in range(i,n-i-n): # move for only the squares in the board
-			if(space[i-x][j-x] == 1):
-				attacks.append([i,j,i-x,j-x])
-				break # stop looking
-	# top side
-	# right side
-	# bottom side
 
 	# if center
+	# check for unique values
+	unique_attks = []
+
+	print(attacks)
+	return attacks
+
+
 
 # setup the fitness function
 def cal_fitness(space):
 	n = len(space)
 	print(n)
 	# make a temporary array to hold the state, making evaluating easy
-	temp_space = [[0 for i in range(0,n)] for i in range(0,n)]
+	temp_space = [[0 for i in range(n)] for j in range(n)]
 	#print(temp_space)
 				
 	fit = 0
@@ -161,21 +200,17 @@ def cal_fitness(space):
 		for i in range(0,n):
 			if(j == space[i]):
 				temp_space[i][j] = 1
-			line += str(temp_space[i][j]) + ' '
-			# cal here
-			if(temp_space[i][j] == 1):
-				attk_pairs.append(check_attack(space,i,j))
-				pass
-		#print(line)
-		board += line + '\n'
-		line = ''
+	print_board(temp_space)
 
-	print(board)
-	print(np.unique(attk_pairs))
+	print(np.shape(temp_space))
+	for i in range(0,n):
+		#print('queen[{},{}]'.format(space[i],i)) # fix the indexing of the temp space
+		attk_pairs.append(check_attack(temp_space,space[i],i))
+	#print(np.unique(attk_pairs))
 	return fit
 
 if __name__ == '__main__':
-	space = generate_state()
+	space = generate_state(n=8)
 	print(space)
 
 	fit = cal_fitness(space)
