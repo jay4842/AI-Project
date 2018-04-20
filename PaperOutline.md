@@ -9,9 +9,10 @@ Explain the N-Queens problem
 Summary of using:
 - The algorithm
 - Fitness function
-- Selection Operator
-- Crossover Operator
-- Mutation Operator
+- Reproduce function
+- Selection operator
+- Crossover operator
+- Mutation operator
 ### 2. Methodology
 #### 2.1 The Algorithm
 #### 2.2 The Fitness Function
