@@ -419,4 +419,8 @@ if __name__ == '__main__':
 		i += 1
 		spinner.next()#'''
 
-
+	# after finding solutions write them to a file
+	with open('solutions.txt', 'w') as file:
+		for sol in solutions:
+			file.write('{}\n'.format(sol))
+		file.close()
