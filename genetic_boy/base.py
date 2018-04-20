@@ -77,9 +77,9 @@ Currently working out how to get this working, once I get it I will check to see
 '''
 def count_attack_pairs(mat):
 
-	print('    FITNESS')
-	print('---------------')
-	print_board(mat)
+	#print('    FITNESS')
+	#print('---------------')
+	#print_board(mat)
 	n = len(mat)
 	row_count        = 0
 	diag_left_count  = 0
@@ -104,7 +104,7 @@ def count_attack_pairs(mat):
 	# end of row check
 	#print('     diag\n---------------')
 	# count the queens in the diagonals
-	print('row count = {}'.format(row_count))
+	#print('row count = {}'.format(row_count))
 	temp_space = mat
 	
 	# left
@@ -119,10 +119,10 @@ def count_attack_pairs(mat):
 			abs_val = abs(i - x)
 			
 			#print('{} {}'.format(x,abs(i - x)))
-			if(temp_space[abs_val][x] == 1):
+			if(temp_space[x][abs_val] == 1):
 				count += 1
-			else:
-				temp_space[abs_val][x] = -1
+			#else:
+				#temp_space[x][abs_val] = -1
 		if(count > 1): 
 			#print('found {} pairs\n'.format(count-1))
 			diag_right_count += (count - 1)
@@ -135,18 +135,93 @@ def count_attack_pairs(mat):
 
 		if(temp_space[x][x] == 1):
 			count += 1
-		else: temp_space[x][x] = -1
+		#else: temp_space[x][x] = -1
 	if(count > 1): 
 		#print('found {} pairs\n'.format(count-1))
 		diag_right_count += (count - 1)
 
 	# now for the other side 
-	i = 0
-	j = 1
+	i = n-2
+	j = n-1
+	#temp_space[j][i] = 2
+	#print('top_boy')
+	while(i >= 1): # this is the first half
+		count = 0
+		#print('------')
+		x = i
+		while(x >= 0):
+			val = abs(i - x)
+			#print('{} {}'.format(x, j-val))
+			if(temp_space[x][j-val] == 1):
+				count += 1
+			#else: 
+				#temp_space[x][j-val] = -1
+			x-=1 
+		i -= 1
 
-	print('diag right = {}'.format(diag_right_count))
-	print('---------------')
-	print_board(temp_space)
+	# diag left
+	# now for the middle
+	i = n-1
+	j = 0
+	count = 0
+	while(i >= 0 and j <= n-1):
+		if(temp_space[i][j] == 1):
+			count += 1
+		#else:
+			#temp_space[i][j] = -1
+		j += 1 
+		i -= 1 
+	if(count > 1): 
+		#print('found {} pairs\n'.format(count-1))
+		diag_left_count += (count - 1)
+
+	i = n-2
+	j = 0
+	while(i >= 0):
+		#print('-----')
+		count = 0
+		for x in range(j,i+1):
+			val = abs(i - x)
+			#print('{} {}'.format(val, x))
+			if(temp_space[x][val] == 1):
+				count += 1
+			#else:
+				#temp_space[x][val] = -1
+		if(count > 1): 
+			#print('found {} pairs\n'.format(count-1))
+			diag_left_count += (count - 1)
+
+		i-=1
+
+	# and the bottom half
+	i = n
+	j = 1
+	#print('bot boy')
+	while(j <= n-2):
+		#print('-------')
+		#print(j)
+		y = i-1
+		x = j
+		count = 0
+		while(x <= n-1):
+			#print('{} {}'.format(y,x))
+			if(temp_space[x][y] == 1):
+				count += 1
+			#else:
+				#temp_space[x][y] = -1
+			y -= 1
+			x += 1
+
+		if(count > 1): 
+			#print('found {} pairs\n'.format(count-1))
+			diag_left_count += (count - 1)
+		j += 1
+
+
+	#print('diag left  = {}'.format(diag_left_count))
+	#print('diag right = {}'.format(diag_right_count))
+	#print('---------------')
+	#print_board(temp_space)
 
 
 	# we don't need to check up or down because that case will never occur
@@ -158,7 +233,7 @@ def count_attack_pairs(mat):
 # setup the fitness function
 def cal_fitness(space):
 	n = len(space)
-	print(n)
+	#print(n)
 	# make a temporary array to hold the state, making evaluating easy
 	temp_space = [[0 for i in range(n)] for j in range(n)]
 	#print(temp_space)
@@ -173,12 +248,158 @@ def cal_fitness(space):
 	
 	return count_attack_pairs(temp_space)
 
+# more stuff
+def generate_pop(pop=1000,n=8):
+	# returns a list size of pop states
+	states = [generate_state(n=8) for x in range(pop)]
+
+	return states
+
+# return a state that has a fit of 0
+def eval_pop(population):
+	for x in population:
+		if(cal_fitness(x) == 0):
+			return x
+	
+	return None
+
+# # # # # # # # # # # # # #
+# Genetic helpers
+def get_rand_pair(n=8):
+	x = r.randint(0,n)
+	y = r.randint(0,n)
+	if(y == x):
+		while(y == x):
+			y = r.randint(0,n)
+
+	return x,y
+# just compare two states
+def compare_state(a,b):
+	if(len(a) != len(b)):
+		return False
+
+	for x in range(len(a)):
+		if(a[x] != b[x]):
+			return False
+
+	return True
+
+def get_two(population):
+	x = r.randint(0,len(population))
+	y = r.randint(0,len(population))
+	if(y == x):
+		while(y == x):
+			y = r.randint(0,len(population))
+
+	return population[x-1], population[y-1]
+
+# mutate helpers
+def single_mutate(state):
+	# swap two values in a state
+	x = r.randint(0,len(state))
+	y = r.randint(0,len(state))
+	if(y == x):
+		while(y == x):
+			y = r.randint(0,len(state))
+	x -= 1# our index was off by one
+	y -= 1 
+
+	temp = state[x]
+	state[x] = state[y]
+	state[y] = temp
+
+	return state
+
+# tournament select
+def tournament_select(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+
+	a_fit = cal_fitness(a)
+	b_fit = cal_fitness(b)
+	return a if a_fit > b_fit else b
+# 
+
+# reproduce
+def reproduce(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+
+	# two point crossover
+	n = len(a)
+
+	x = int(n/3)
+	y = n-3
+	#print(x)
+	#print(y)
+	child = []
+	#crossover points
+	for i in range(0,x):
+		child.append(a[i])
+	for i in range(x,y):
+		child.append(b[i])
+	for i in range(y,len(a)):
+		child.append(a[i])
+
+	return child
+
+
+# the mutate function
+def mutate(child):
+	state_1 = single_mutate(child)
+	state_2 = single_mutate(child)
+
+	sub_1_1 = single_mutate(state_1)
+	sub_1_2 = single_mutate(state_1)
+
+	sub_2_1 = single_mutate(state_2)
+	sub_2_2 = single_mutate(state_2)
+
+	sub_1_w = tournament_select(sub_1_1,sub_1_2)
+	sub_2_w = tournament_select(sub_2_1,sub_2_2)
+	return tournament_select(sub_1_w,sub_2_w)	
+
+def gen_child(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+	child = reproduce(x,y)
+	if(r.randint(0,100) > chance):
+		child = mutate(child)
+
+	return child
+
+# # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
-	space = generate_state(n=8)
-	print(space)
+	n = 8
+	chance = 50
+	i = 0
+	population = generate_pop(n=8)
+	# 92
+	solutions = []
+	while(len(solutions) != 92):
+		if(i % 100 == 0):
+			print('Iteration: {} pop size: {}'.format(i, len(population)))
+		
+		max_child = r.randint(10,500)
+		for x in range(max_child):
+			x, y = get_two(population) 
+			population.append(gen_child(x,y))
 
-	fit = cal_fitness(space)
-	print(fit)
+		check = eval_pop(population)
 
+		if(check != None):
+			unique = True
+			for x in range(len(solutions)):
+				if(compare_state(check,x)):
+					unique = False
+					break
+			if(unique):
+				solutions.append(check)
+				print('Found solution! {}'.format(check))
+		
+		i += 1
 
 
