@@ -2,17 +2,22 @@
 
 ### Abstract
 ### 1. Introduction
-> #### The Task
+#### The Task
 Explain the N-Queens problem
-> Summary of using the algorithm, fitness function, selection,
-crossover, and mutation operations.
+- Constraints
+- Number of solutions
+Summary of using:
+- The algorithm
+- Fitness function
+- Selection Operator
+- Crossover Operator
+- Mutation Operator
 ### 2. Methodology
 #### 2.1 The Algorithm
-> Explain the genetic algorithm and 
-> #### 2.2 The Fitness Function
-> #### 2.3 The Selection Operator
-> #### 2.4 The Crossover Operator
-> #### 2.5 The Mutation Operator
+#### 2.2 The Fitness Function
+#### 2.3 The Selection Operator
+#### 2.4 The Crossover Operator
+#### 2.5 The Mutation Operator
 ### 3 Experiment
 ### 4 Results
 ### 5 Conclusion
