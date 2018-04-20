@@ -17,6 +17,7 @@
 '''
 import random as r
 import numpy as np
+from progress.spinner import Spinner
 
 # http://oeis.org/A000170
 # The number of solutions is OEIS sequence A000170:
@@ -119,7 +120,7 @@ def count_attack_pairs(mat):
 			abs_val = abs(i - x)
 			
 			#print('{} {}'.format(x,abs(i - x)))
-			if(temp_space[x][abs_val] == 1):
+			if(temp_space[abs_val][x] == 1):
 				count += 1
 			#else:
 				#temp_space[x][abs_val] = -1
@@ -257,9 +258,9 @@ def generate_pop(pop=1000,n=8):
 
 # return a state that has a fit of 0
 def eval_pop(population):
-	for x in population:
-		if(cal_fitness(x) == 0):
-			return x
+	for x in range(len(population)):
+		if(cal_fitness(population[x]) == 0):
+			return population[x]
 	
 	return None
 
@@ -275,9 +276,6 @@ def get_rand_pair(n=8):
 	return x,y
 # just compare two states
 def compare_state(a,b):
-	if(len(a) != len(b)):
-		return False
-
 	for x in range(len(a)):
 		if(a[x] != b[x]):
 			return False
@@ -318,7 +316,7 @@ def tournament_select(a,b):
 
 	a_fit = cal_fitness(a)
 	b_fit = cal_fitness(b)
-	return a if a_fit > b_fit else b
+	return a if a_fit < b_fit else b
 # 
 
 # reproduce
@@ -329,21 +327,31 @@ def reproduce(a,b):
 
 	# two point crossover
 	n = len(a)
+	child_a = []
+	child_b = []
+	swap = False
+	for x in range(0,n):
+		#print(x)
+		if(x % 2 == 0):
+			#print('set')
+			swap = False
+		else: 
+			#print('...')
+			swap = True
 
-	x = int(n/3)
-	y = n-3
-	#print(x)
-	#print(y)
-	child = []
-	#crossover points
-	for i in range(0,x):
-		child.append(a[i])
-	for i in range(x,y):
-		child.append(b[i])
-	for i in range(y,len(a)):
-		child.append(a[i])
+		if(swap):
+			child_a.append(a[x])
+			child_b.append(b[x])
+		else:
+			child_a.append(b[x])
+			child_b.append(a[x])
+		
 
-	return child
+	if(r.randint(0,100) > 65):
+		child_a = mutate(child_a)
+		child_b = mutate(child_b)
+
+	return tournament_select(child_a,child_b)
 
 
 # the mutate function
@@ -373,12 +381,19 @@ def gen_child(a,b):
 
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
+	#state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
+	#state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
+	#print(cal_fitness(state))
+	#print(compare_state(state_1,state_2))
+	
 	n = 8
 	chance = 50
 	i = 0
 	population = generate_pop(n=8)
 	# 92
 	solutions = []
+	
+	spinner = Spinner('working ')
 	while(len(solutions) != 92):
 		if(i % 100 == 0):
 			print('Iteration: {} pop size: {}'.format(i, len(population)))
@@ -392,14 +407,16 @@ if __name__ == '__main__':
 
 		if(check != None):
 			unique = True
-			for x in range(len(solutions)):
-				if(compare_state(check,x)):
-					unique = False
-					break
-			if(unique):
-				solutions.append(check)
-				print('Found solution! {}'.format(check))
+			if(len(solutions) > 0):
+				for x in range(len(solutions)):
+					if(compare_state(check,x)):
+						unique = False
+						break
+				if(unique):
+					solutions.append(check)
+					print('Found solution! {}'.format(check))
 		
 		i += 1
+		spinner.next()#'''
 
 
