@@ -380,14 +380,14 @@ def gen_child(a,b,chane=70):
 
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
-	state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
-	state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
-	a = [2, 5, 1, 3, 8, 4, 7, 6]
-	b = [2, 4, 7, 3, 6, 1, 8, 5]
+	#state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
+	#state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
+	#a = [2, 5, 1, 3, 8, 4, 7, 6]
+	#b = [2, 4, 7, 3, 6, 1, 8, 5]
 	#print(cal_fitness(state))
 	#print(compare_state(state_1,state_2))
 	
-	print(reproduce(a,b))
+	#print(reproduce(a,b))
 	n = 8
 	chance = 50
 	i = 0
