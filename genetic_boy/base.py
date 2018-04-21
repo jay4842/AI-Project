@@ -18,6 +18,8 @@
 import random as r
 import numpy as np
 from progress.spinner import Spinner
+import datetime
+import time
 
 # http://oeis.org/A000170
 # The number of solutions is OEIS sequence A000170:
@@ -256,14 +258,6 @@ def generate_pop(pop=1000,n=8):
 
 	return states
 
-# return a state that has a fit of 0
-def eval_pop(population):
-	for x in range(len(population)):
-		if(cal_fitness(population[x]) == 0):
-			return population[x]
-	
-	return None
-
 # # # # # # # # # # # # # #
 # Genetic helpers
 def get_rand_pair(n=8):
@@ -289,6 +283,12 @@ def get_two(population):
 	if(y == x):
 		while(y == x):
 			y = r.randint(0,len(population))
+	while((cal_fitness(population[x-1]) > 5) and (cal_fitness(population[y-1]) > 5)):
+		x = r.randint(0,len(population))
+		y = r.randint(0,len(population))
+		if(y == x):
+			while(y == x):
+				y = r.randint(0,len(population))
 
 	return population[x-1], population[y-1]
 
@@ -381,27 +381,10 @@ def heavy_mutate(child):
 	sub_2_w = tournament_select(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 
-# depreciated!
-def gen_child(a,b,chance=80):
-	if(len(a) != len(b)):
-		print('error: states are not the same size!')
-		return
-	child = reproduce(x,y)
-	# Remember: we only want to keep fit boys
-	fit   = cal_fitness(child)
-	fit_a = cal_fitness(a)
-	fit_b = cal_fitness(b)
-	if((fit_a < fit) or (fit_b < fit)):
-		# if our child is not stronger than the others generate a new guy but dont keep going
-		child = reproduce(x,y)
-
-	if(r.randint(0,100) > chance):
-		child = slight_mutate(child)
-
-	return child
 
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
+	start_time = time.time()
 	#state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
 	#state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
 	#a = [2, 5, 1, 3, 8, 4, 7, 6]
@@ -416,6 +399,7 @@ if __name__ == '__main__':
 	population = generate_pop(pop=10000,n=8)
 	# 92
 	solutions = []
+	debug = True
 	
 	# first eval population
 	for state in population:
@@ -443,7 +427,7 @@ if __name__ == '__main__':
 		
 		max_child = 500
 		best_child = [0 for k in range(n)]
-		#print('NEXT GENERATION')
+		#if(debug): print('NEXT GENERATION')
 		for x in range(max_child): # now to generate the guys
 			x, y = get_two(population) 
 			child = reproduce(x,y)
@@ -489,7 +473,7 @@ if __name__ == '__main__':
 			else:
 				if(cal_fitness(child) < cal_fitness(best_child)):
 					best_child = child
-					#print('best child: {} {}'.format(cal_fitness(best_child),best_child))
+					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
 		# now see if the child is a solution
 
 		
@@ -501,3 +485,7 @@ if __name__ == '__main__':
 		for sol in solutions:
 			file.write('{}\n'.format(sol))
 		file.close()
+
+	print('DONE!')
+	elapsed_time = time.time() - start_time
+	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
