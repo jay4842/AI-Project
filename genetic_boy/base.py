@@ -327,31 +327,30 @@ def reproduce(a,b):
 
 	# two point crossover
 	n = len(a)
-	child_a = []
-	child_b = []
-	swap = False
-	for x in range(0,n):
-		#print(x)
-		if(x % 2 == 0):
-			#print('set')
-			swap = False
-		else: 
-			#print('...')
-			swap = True
-
-		if(swap):
-			child_a.append(a[x])
-			child_b.append(b[x])
+	
+	x = int(n/3)
+	y = n-3
+	#print(x)
+	#print(y)
+	child = [-1 for x in range(n)]
+	nums  = []
+	#crossover points
+	# First use three way tournament using the parents
+	for i in range(n):
+		if(a[i] == b[i]):
+			child[i] = a[i]
 		else:
-			child_a.append(b[x])
-			child_b.append(a[x])
-		
+			nums.append(a[i])
+			nums.append(b[i])
 
-	if(r.randint(0,100) > 65):
-		child_a = mutate(child_a)
-		child_b = mutate(child_b)
 
-	return tournament_select(child_a,child_b)
+	# now fill in the rest
+	for i in range(n):
+		if(child[i] == -1):
+			idx = (r.randint(0,len(nums))) - 1
+			child[i] = nums[idx]
+
+	return child
 
 
 # the mutate function
@@ -369,7 +368,7 @@ def mutate(child):
 	sub_2_w = tournament_select(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 
-def gen_child(a,b):
+def gen_child(a,b,chane=70):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
@@ -381,11 +380,14 @@ def gen_child(a,b):
 
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
-	#state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
-	#state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
+	state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
+	state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
+	a = [2, 5, 1, 3, 8, 4, 7, 6]
+	b = [2, 4, 7, 3, 6, 1, 8, 5]
 	#print(cal_fitness(state))
 	#print(compare_state(state_1,state_2))
 	
+	print(reproduce(a,b))
 	n = 8
 	chance = 50
 	i = 0
@@ -419,4 +421,8 @@ if __name__ == '__main__':
 		i += 1
 		spinner.next()#'''
 
-
+	# after finding solutions write them to a file
+	with open('solutions.txt', 'w') as file:
+		for sol in solutions:
+			file.write('{}\n'.format(sol))
+		file.close()
