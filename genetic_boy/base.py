@@ -389,7 +389,7 @@ if __name__ == '__main__':
 	
 	#print(reproduce(a,b))
 	n = 8
-	chance = 50
+	chance = 65
 	i = 0
 	population = generate_pop(n=8)
 	# 92
@@ -403,7 +403,7 @@ if __name__ == '__main__':
 		max_child = r.randint(10,500)
 		for x in range(max_child):
 			x, y = get_two(population) 
-			population.append(gen_child(x,y))
+			population.append(gen_child(x,y,chance=chance))
 
 		check = eval_pop(population)
 
