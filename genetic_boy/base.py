@@ -368,7 +368,7 @@ def mutate(child):
 	sub_2_w = tournament_select(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 
-def gen_child(a,b,chane=70):
+def gen_child(a,b,chance=70):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
