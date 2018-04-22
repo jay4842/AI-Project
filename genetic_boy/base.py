@@ -408,6 +408,7 @@ if __name__ == '__main__':
 					unique = False
 			if(unique):
 				solutions.append(state)
+				print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
 
 	# now check for duplicates
 	spinner = Spinner('working ')
