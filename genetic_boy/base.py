@@ -282,6 +282,7 @@ def compare_state(a,b):
 
 	return True
 
+# change this to only return parents with a fitness of 4 or less
 def get_two(population):
 	x = r.randint(0,len(population))
 	y = r.randint(0,len(population))
