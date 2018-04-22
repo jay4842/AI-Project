@@ -470,9 +470,9 @@ if __name__ == '__main__':
 				if(cal_fitness(child) < cal_fitness(best_child)):
 					best_child = child
 					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
+			spinner.next() # moved this guy here
 		# now see if the child is a solution
 
-		spinner.next()
 		population = new_pop
 		i += 1
 		total_states += len(population)
