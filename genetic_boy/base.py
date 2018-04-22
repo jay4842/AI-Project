@@ -14,6 +14,9 @@
 
 	at row 0 there is a queen on tile 3.
 	
+
+New UPDATE:
+Producing a generation will override the previous generation, only producing fit children.
 '''
 import random as r
 import numpy as np
@@ -385,111 +388,13 @@ def heavy_mutate(child):
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	start_time = time.time()
-	#state_1 = [0, 3, 4, 5, 1, 6, 7, 2]
-	#state_2 = [6, 0, 7, 1, 4, 2, 5, 3] # this is a solved state!
-	#a = [2, 5, 1, 3, 8, 4, 7, 6]
-	#b = [2, 4, 7, 3, 6, 1, 8, 5]
-	#print(cal_fitness(state))
-	#print(compare_state(state_1,state_2))
-	
-	#print(reproduce(a,b))
 	n = 8
 	chance = 65
 	i = 0
-	population = generate_pop(pop=10000,n=8)
+	solutions = []
+	population = generate_pop(pop=100000,n=8)
 	# 92
-	solutions = [
-		[5, 3, 1, 7, 4, 6, 0, 2],
-		[2, 5, 7, 0, 3, 6, 4, 1],
-		[0, 4, 1, 7, 3, 6, 2, 5],
-		[5, 0, 1, 3, 6, 2, 7, 4],
-		[3, 7, 0, 1, 5, 2, 6, 4],
-		[0, 5, 1, 2, 3, 7, 4, 6],
-		[1, 7, 4, 6, 0, 2, 5, 3],
-		[5, 2, 6, 1, 3, 4, 0, 7],
-		[3, 0, 7, 5, 1, 2, 4, 6],
-		[5, 0, 2, 6, 3, 7, 4, 1],
-		[1, 7, 0, 2, 3, 4, 5, 6],
-		[4, 6, 0, 2, 7, 5, 3, 1],
-		[5, 0, 1, 7, 4, 2, 3, 6],
-		[6, 2, 0, 1, 3, 4, 5, 7],
-		[7, 1, 6, 0, 2, 4, 5, 3],
-		[6, 3, 0, 7, 1, 4, 2, 5],
-		[3, 1, 7, 2, 0, 6, 4, 5],
-		[2, 0, 7, 3, 1, 6, 4, 5],
-		[6, 4, 2, 0, 3, 7, 5, 1],
-		[3, 5, 0, 1, 6, 2, 7, 4],
-		[4, 0, 5, 2, 6, 1, 3, 7],
-		[7, 2, 0, 3, 6, 4, 5, 1],
-		[6, 4, 1, 7, 0, 2, 3, 5],
-		[6, 0, 3, 1, 7, 4, 2, 5],
-		[2, 5, 7, 0, 1, 3, 4, 6],
-		[2, 0, 5, 7, 4, 1, 3, 6],
-		[7, 1, 4, 2, 0, 6, 3, 5],
-		[2, 0, 6, 1, 3, 5, 7, 4],
-		[3, 0, 4, 7, 1, 6, 2, 5],
-		[7, 0, 6, 1, 2, 5, 3, 4],
-		[1, 5, 7, 2, 0, 3, 4, 6],
-		[3, 1, 4, 7, 0, 6, 2, 5],
-		[3, 0, 7, 4, 6, 1, 2, 5],
-		[4, 6, 1, 3, 7, 0, 2, 5],
-		[5, 3, 1, 7, 4, 2, 0, 6],
-		[0, 7, 1, 2, 3, 4, 5, 6],
-		[5, 0, 4, 1, 7, 3, 6, 2],
-		[3, 0, 6, 2, 5, 1, 4, 7],
-		[7, 1, 4, 2, 0, 3, 5, 6],
-		[3, 0, 4, 7, 1, 2, 5, 6],
-		[3, 0, 6, 1, 2, 4, 7, 5],
-		[4, 0, 1, 2, 3, 7, 5, 6],
-		[1, 6, 0, 3, 7, 4, 2, 5],
-		[6, 3, 1, 4, 7, 0, 2, 5],
-		[6, 3, 5, 0, 1, 4, 2, 7],
-		[7, 2, 0, 6, 4, 1, 5, 3],
-		[0, 3, 6, 2, 7, 1, 4, 5],
-		[7, 4, 0, 1, 2, 6, 3, 5],
-		[2, 0, 6, 1, 3, 4, 7, 5],
-		[3, 6, 0, 2, 5, 1, 4, 7],
-		[1, 4, 7, 0, 2, 3, 5, 6],
-		[3, 1, 4, 7, 5, 0, 2, 6],
-		[4, 7, 0, 2, 6, 1, 3, 5],
-		[7, 5, 1, 2, 0, 3, 6, 4],
-		[7, 1, 3, 0, 2, 4, 5, 6],
-		[4, 0, 3, 5, 7, 1, 6, 2],
-		[6, 0, 1, 2, 5, 3, 4, 7],
-		[4, 0, 1, 6, 2, 3, 5, 7],
-		[6, 0, 2, 4, 1, 7, 5, 3],
-		[4, 1, 7, 2, 3, 6, 0, 5],
-		[5, 2, 6, 3, 0, 7, 1, 4],
-		[5, 2, 6, 1, 3, 7, 0, 4],
-		[5, 2, 0, 6, 4, 7, 1, 3],
-		[6, 3, 0, 2, 7, 4, 1, 5],
-		[4, 6, 0, 2, 7, 1, 3, 5],
-		[5, 0, 2, 4, 7, 1, 3, 6],
-		[7, 0, 1, 5, 2, 4, 6, 3],
-		[3, 1, 7, 4, 2, 0, 5, 6],
-		[7, 1, 6, 2, 0, 4, 5, 3],
-		[3, 6, 0, 7, 1, 4, 2, 5],
-		[5, 2, 0, 7, 4, 1, 3, 6],
-		[1, 4, 7, 5, 0, 2, 6, 3],
-		[3, 5, 0, 1, 6, 4, 2, 7],
-		[3, 1, 6, 2, 5, 7, 0, 4],
-		[6, 0, 1, 2, 3, 5, 7, 4],
-		[3, 0, 6, 4, 1, 7, 5, 2],
-		[6, 3, 1, 7, 4, 0, 5, 2],
-		[3, 0, 7, 5, 1, 2, 6, 4],
-		[1, 7, 2, 6, 3, 0, 4, 5],
-		[4, 0, 7, 2, 6, 3, 1, 5],
-		[7, 0, 1, 2, 5, 3, 4, 6],
-		[5, 2, 0, 7, 3, 1, 6, 4],
-		[3, 5, 0, 2, 6, 4, 1, 7],
-		[4, 0, 1, 5, 7, 2, 6, 3],
-		[5, 0, 1, 6, 4, 2, 7, 3],
-		[4, 1, 7, 0, 3, 6, 2, 5],
-		[3, 6, 2, 7, 1, 4, 0, 5],
-		[2, 4, 7, 1, 3, 6, 0, 5],
-		[3, 7, 0, 1, 5, 2, 4, 6],
-		[0, 7, 4, 6, 1, 2, 5, 3],
-		[4, 0, 1, 2, 6, 3, 5, 7]]
+	
 	print(len(solutions))
 	debug = True
 	
@@ -507,10 +412,15 @@ if __name__ == '__main__':
 	# now check for duplicates
 	spinner = Spinner('working ')
 	while(len(solutions) != 92):
-		if(i % 100 == 0):
-			print('Iteration: {} pop size: {}'.format(i, len(population)))
+		total_states = len(population)
+		if(i % 1000 == 0):
+			print('GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
+			elapsed_time = time.time() - start_time
+			print('Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 		
-		max_child = 500
+
+		max_child = 100000
+		new_pop = []
 		best_child = [0 for k in range(n)]
 		#if(debug): print('NEXT GENERATION')
 		for x in range(max_child): # now to generate the guys
@@ -544,7 +454,7 @@ if __name__ == '__main__':
 				if(r.randint(0,100) > chance):
 					child = slight_mutate(child)
 			# then add the guy
-			population.append(child)
+			new_pop.append(child)
 			# check if this guy is a solution
 			unique = True
 			if(cal_fitness(child) == 0):
@@ -554,16 +464,18 @@ if __name__ == '__main__':
 						unique = False
 				if(unique):
 					solutions.append(child)
-					print('FOUND SOLUTION: {}'.format(child))
+					print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),child))
 			else:
 				if(cal_fitness(child) < cal_fitness(best_child)):
 					best_child = child
 					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
 		# now see if the child is a solution
 
-		
+		spinner.next()
+		population = new_pop
 		i += 1
-		spinner.next()#'''
+		total_states += len(population)
+		#'''
 
 	# after finding solutions write them to a file
 	with open('solutions.txt', 'w') as file:
