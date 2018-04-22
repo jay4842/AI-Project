@@ -412,7 +412,7 @@ if __name__ == '__main__':
 	n = 8
 	chance = 65
 	i = 0
-	population = generate_pop(n=8)
+	population = generate_pop(pop=10000,n=8)
 	# 92
 	solutions = []
 	
@@ -440,7 +440,9 @@ if __name__ == '__main__':
 		if(i % 100 == 0):
 			print('Iteration: {} pop size: {}'.format(i, len(population)))
 		
-		max_child = r.randint(10,500)
+		max_child = 500
+		best_child = [0 for k in range(n)]
+		#print('NEXT GENERATION')
 		for x in range(max_child): # now to generate the guys
 			x, y = get_two(population) 
 			child = reproduce(x,y)
@@ -483,7 +485,10 @@ if __name__ == '__main__':
 				if(unique):
 					solutions.append(child)
 					print('FOUND SOLUTION: {}'.format(child))
-
+			else:
+				if(cal_fitness(child) < cal_fitness(best_child)):
+					best_child = child
+					#print('best child: {} {}'.format(cal_fitness(best_child),best_child))
 		# now see if the child is a solution
 
 		
