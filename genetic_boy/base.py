@@ -318,24 +318,15 @@ def tournament_select(a,b):
 	b_fit = cal_fitness(b)
 	return a if a_fit < b_fit else b
 # 
-
-# reproduce
-def reproduce(a,b):
+def three_way_tournament(a,b):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
-
-	# two point crossover
-	n = len(a)
 	
-	x = int(n/3)
-	y = n-3
-	#print(x)
-	#print(y)
+	n = len(a)
 	child = [-1 for x in range(n)]
 	nums  = []
-	#crossover points
-	# First use three way tournament using the parents
+
 	for i in range(n):
 		if(a[i] == b[i]):
 			child[i] = a[i]
@@ -351,10 +342,31 @@ def reproduce(a,b):
 			child[i] = nums[idx]
 
 	return child
+#
+
+# reproduce
+def reproduce(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+	# three way tournament
+	child = three_way_tournament(a,b)
+	return child
 
 
-# the mutate function
-def mutate(child):
+# These also might change if we dont find children
+# the mutate functions
+def slight_mutate(child):
+	return single_mutate(child)
+
+def med_mutate(child):
+	# only do one side of the guy
+	state_1 = single_mutate(child)
+	sub_1_1 = single_mutate(state_1)
+	sub_1_2 = single_mutate(state_1)
+	return tournament_select(sub_1_1,sub_1_2)
+# for getting a really different child
+def heavy_mutate(child):
 	state_1 = single_mutate(child)
 	state_2 = single_mutate(child)
 
@@ -368,13 +380,22 @@ def mutate(child):
 	sub_2_w = tournament_select(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 
-def gen_child(a,b,chance=70):
+# depreciated!
+def gen_child(a,b,chance=80):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
 	child = reproduce(x,y)
+	# Remember: we only want to keep fit boys
+	fit   = cal_fitness(child)
+	fit_a = cal_fitness(a)
+	fit_b = cal_fitness(b)
+	if((fit_a < fit) or (fit_b < fit)):
+		# if our child is not stronger than the others generate a new guy but dont keep going
+		child = reproduce(x,y)
+
 	if(r.randint(0,100) > chance):
-		child = mutate(child)
+		child = slight_mutate(child)
 
 	return child
 
@@ -395,28 +416,76 @@ if __name__ == '__main__':
 	# 92
 	solutions = []
 	
+	# first eval population
+	for state in population:
+		if(cal_fitness(state) == 0):
+			solutions.append(state)
+
+	# now check for duplicates
+	for i in range(0,len(solutions)):
+		temp = solutions[i]
+		if(i < len(solutions)):
+			for j in range(i,len(solutions)):
+				if(compare_state(temp,solutions[j])):
+					solutions.remove(solutions[j])
+					j-=1
+
+	if(len(solutions) > 0):
+		for state in solutions:
+			print('SOLUTION: {}'.format(state))
+
+
 	spinner = Spinner('working ')
 	while(len(solutions) != 92):
 		if(i % 100 == 0):
 			print('Iteration: {} pop size: {}'.format(i, len(population)))
 		
 		max_child = r.randint(10,500)
-		for x in range(max_child):
+		for x in range(max_child): # now to generate the guys
 			x, y = get_two(population) 
-			population.append(gen_child(x,y,chance=chance))
-
-		check = eval_pop(population)
-
-		if(check != None):
+			child = reproduce(x,y)
+			# Remember: we only want to keep fit boys
+			fit   = cal_fitness(child)
+			fit_a = cal_fitness(x)
+			fit_b = cal_fitness(y)
+			if((fit_a < fit) or (fit_b < fit)):
+				# if our child is not stronger than the others generate a new guy
+				if(fit > 0 and fit < 2):
+					# slight or maybe med
+					if(r.randint(0,100) > chance):
+						child = med_mutate(child)
+					else:
+						child = slight_mutate(child)
+				# now check the medium chance condition		
+				elif(fit > 2 and fit < (n-(n/2) * 2)):
+					if(r.randint(0,100) > chance):
+						child = heavy_mutate(child)
+					else:
+						child = med_mutate(child)
+				
+				# If we are that unfit heavy mutation
+				else:
+					child = heavy_mutate(child)
+			
+			# else there is still a chance of a slight mutation
+			else:
+				if(r.randint(0,100) > chance):
+					child = slight_mutate(child)
+			# then add the guy
+			population.append(child)
+			# check if this guy is a solution
 			unique = True
-			if(len(solutions) > 0):
-				for x in range(len(solutions)):
-					if(compare_state(check,x)):
+			if(cal_fitness(child) == 0):
+				# add the guy
+				for state in solutions:
+					if(compare_state(child,state)):
 						unique = False
-						break
 				if(unique):
-					solutions.append(check)
-					print('Found solution! {}'.format(check))
+					solutions.append(child)
+					print('FOUND SOLUTION: {}'.format(child))
+
+		# now see if the child is a solution
+
 		
 		i += 1
 		spinner.next()#'''
