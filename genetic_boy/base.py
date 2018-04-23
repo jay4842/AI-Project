@@ -30,6 +30,16 @@ import time
 # 95815104,666090624,4968057848,39029188884,314666222712,2691008701644,
 # 24233937684440,227514171973736,2207893435808352,22317699616364044,234907967154122528
 
+# just to hold our states
+class State():
+	
+	def __init__(self,n=8,val=None):
+		if(val == None):
+			self.state = generate_state(n)
+		else:
+			self.state = val
+		self.children = 0
+
 # this will generate a state of n queens
 def generate_state(n=8):
 	# Start with 8 as the normal
@@ -256,7 +266,7 @@ def cal_fitness(space):
 # more stuff
 def generate_pop(pop=1000,n=8):
 	# returns a list size of pop states
-	states = [generate_state(n=8) for x in range(pop)]
+	states = [State(n) for x in range(pop)]
 
 	return states
 
@@ -414,7 +424,7 @@ if __name__ == '__main__':
 	chance = 65
 	i = 0
 	solutions = []
-	population = generate_pop(pop=100000,n=8)
+	population = generate_pop(pop=200000,n=8)
 	# 92
 	
 	print(len(solutions))
@@ -422,7 +432,8 @@ if __name__ == '__main__':
 	
 	# first eval population
 	spinner = Spinner('')
-	for state in population:
+	for q  in range(len(population)):
+		state = population[q].state
 		unique = True
 		if(cal_fitness(state) == 0):
 			# add the guy
@@ -435,45 +446,60 @@ if __name__ == '__main__':
 		spinner.next()
 	# now check for duplicates
 	spinner = Spinner('working ')
+	total_states = len(population)
 	while(len(solutions) != 92):
-		total_states = len(population)
-		
-		print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
-		elapsed_time = time.time() - start_time
-		print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-		print('-----------------------------------------------------------------')
+		if(i % 10 == 0):
+			print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
+			elapsed_time = time.time() - start_time
+			print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print('-----------------------------------------------------------------')
 
-		max_child = 50000
-		#new_pop = []
+		max_child = 200000
+		new_pop = []
 		best_child = [0 for k in range(n)]
 		#print('----- NEXT GENERATION -----')
-		for x in range(max_child): # now to generate the guys
-			x, y = get_two(population) 
-			child = reproduce(x,y)
+		for u in range(max_child): # now to generate the guys
+			#print('pop {}'.format(len(population)))
+			x, y = get_two(population)
+			x.children += 1
+			y.children += 1
+			child = State(val=reproduce(x.state,y.state))
 			# now evaluate the child
-			child = eval_mutate(x,y,child)
+			child.state = eval_mutate(x.state,y.state,child.state)
 			# then add the guy
 			population.append(child)
 			# check if this guy is a solution
 			unique = True
-			if(cal_fitness(child) == 0):
+			if(cal_fitness(child.state) == 0):
 				# add the guy
-				for state in solutions:
-					if(compare_state(child,state)):
+				for q in range(len(solutions)):
+					state = solutions[q]
+					if(compare_state(child.state,state)):
 						unique = False
 				if(unique):
-					solutions.append(child)
-					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child))
-			else:
-				if(cal_fitness(child) < cal_fitness(best_child)):
-					best_child = child
+					solutions.append(child.state)
+					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
+			#else:
+				#if(cal_fitness(child.state) < cal_fitness(best_child)):
+					#best_child = child
 					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
+			new_pop.append(child)
+			# some last checks
+			# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
+			if(x.children > 5):
+				#print('State {} died: {} {}'.format(population.index(x),cal_fitness(x.state),x.state))
+				population.remove(x)
+
+			if(y.children > 5):
+				#print('State {} died: {} {}'.format(population.index(y),cal_fitness(y.state),y.state))
+				population.remove(y)
 			spinner.next() # moved this guy here
 		# now see if the child is a solution
 
-		#population = new_pop
+		total_states += len(new_pop)
+		population = new_pop
 		i += 1
-		total_states += len(population)
+		
 		#'''
 
 	# after finding solutions write them to a file
