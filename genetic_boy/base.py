@@ -33,6 +33,8 @@ import time
 # just to hold our states
 class State():
 	
+	# can have a state passed as a parameter
+	#  or randomly create it
 	def __init__(self,n=8,val=None):
 		if(val == None):
 			self.state = generate_state(n)
@@ -78,7 +80,7 @@ def print_board(space):
 			elif(space[i][j] == 0):
 				line += '. '
 			else:
-				line += '~ '
+				line += '~ ' # <- This is a debug feature for count attack pairs
 		board += line + '\n'
 		line = ''
 	print(board)
@@ -89,6 +91,11 @@ def print_board(space):
 '''
 Currently working out how to get this working, once I get it I will check to see how to make
  it more simple
+
+ Okay so this guy works by going horizontally and diagonally to count the number of queens in
+ an attacking state.
+
+ It might look like a lot but it really just traverses the board and returns the number of attacks.
 '''
 def count_attack_pairs(mat):
 
@@ -246,15 +253,12 @@ def count_attack_pairs(mat):
 # END OF ATTACK HELPERS # # # # # # # # # 
 
 # setup the fitness function
-def cal_fitness(space):
+def cal_fitness(space): # RETURN THE NUMBER OF ATTACKS FOUND
 	n = len(space)
 	#print(n)
 	# make a temporary array to hold the state, making evaluating easy
 	temp_space = [[0 for i in range(n)] for j in range(n)]
 	#print(temp_space)
-				
-	fit = 0
-	attk_pairs = [] # will store pair info, ex attk_pairs = [[2,2,1,3],...] # will store a pair of queens in each sub array
 
 	for j in range(0,n): # show the board for now
 		for i in range(0,n):
@@ -264,6 +268,7 @@ def cal_fitness(space):
 	return count_attack_pairs(temp_space)
 
 # more stuff
+# GENERATE A RANDOM POPULATION OF STATES
 def generate_pop(pop=1000,n=8):
 	# returns a list size of pop states
 	states = [State(n) for x in range(pop)]
@@ -272,7 +277,7 @@ def generate_pop(pop=1000,n=8):
 
 # # # # # # # # # # # # # #
 # Genetic helpers
-def get_rand_pair(n=8):
+def get_rand_pair(n=8): # return two random numbers, helpers that is most likely not used....
 	x = r.randint(0,n)
 	y = r.randint(0,n)
 	if(y == x):
@@ -281,14 +286,14 @@ def get_rand_pair(n=8):
 
 	return x,y
 # just compare two states
-def compare_state(a,b):
+def compare_state(a,b): # check if two states are equal
 	for x in range(len(a)):
 		if(a[x] != b[x]):
 			return False
 
 	return True
 
-# change this to only return parents with a fitness of 4 or less
+# Return two parents and make sure they are not the same
 def get_two(population):
 	x = r.randint(0,len(population))
 	y = r.randint(0,len(population))
@@ -299,6 +304,7 @@ def get_two(population):
 	return population[x-1], population[y-1]
 
 # mutate helpers
+#  swaps two values in a state
 def single_mutate(state):
 	# swap two values in a state
 	x = r.randint(0,len(state))
@@ -316,6 +322,7 @@ def single_mutate(state):
 	return state
 
 # tournament select
+#  returns the fittest parent
 def tournament_select(a,b):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
@@ -325,15 +332,20 @@ def tournament_select(a,b):
 	b_fit = cal_fitness(b)
 	return a if a_fit < b_fit else b
 # 
+# Three way tournament.
+# - Transfer where the two parents are equal to the parent,
+# - then use the numbers not transfered as the domain of the other spots,
+# - Use these domains to randomly fill in the empty areas
 def three_way_tournament(a,b):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
 	
 	n = len(a)
-	child = [-1 for x in range(n)]
+	child = [-1 for x in range(n)] # make the child
 	nums  = []
 
+	# See where the parents are equal, else add to the domain
 	for i in range(n):
 		if(a[i] == b[i]):
 			child[i] = a[i]
@@ -352,6 +364,9 @@ def three_way_tournament(a,b):
 #
 
 # reproduce
+
+# simple three way tournament crossover
+#  Try it with another way?
 def reproduce(a,b):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
@@ -388,51 +403,38 @@ def heavy_mutate(child):
 	sub_2_w = three_way_tournament(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 #
-def eval_mutate(x,y,child):
+
+# This will be a bridge for testing out different ways to get fit children!
+def eval_mutate(x,y,child,n=8,chance=75):
 	fit   = cal_fitness(child)
 	fit_a = cal_fitness(x)
 	fit_b = cal_fitness(y)
-	if((fit_a < fit) or (fit_b < fit)):
-		# if our child is not stronger than the others generate a new guy
-		if(fit > 0 and fit < 2):
-			# slight or maybe med
-			if(r.randint(0,100) > chance):
-				child = med_mutate(child)
-			else:
-				child = slight_mutate(child)
-		# now check the medium chance condition		
-		elif(fit > 2 and fit < (n-(n/2) * 2)):
-			if(r.randint(0,100) > chance):
-				child = heavy_mutate(child)
-			else:
-				child = med_mutate(child)
-				
-		# If we are that unfit heavy mutation
-		else:
-			child = heavy_mutate(child)
-			
-			# else there is still a chance of a slight mutation
-	else:
-		if(r.randint(0,100) > chance):
+
+	if(r.randint(0,100) > chance):
+		if(r.randint(0,100) > 50):
 			child = slight_mutate(child)
+		else:
+			child = med_mutate(child)
 
 	return child
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	start_time = time.time()
+	child_limit = 7
 	n = 8
 	chance = 65
 	i = 0
 	solutions = []
-	population = generate_pop(pop=200000,n=8)
+	population = generate_pop(pop=50000,n=8)
 	# 92
 	
 	print(len(solutions))
 	debug = True
-	
+	# open our log
+	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
 	with open('log.txt','w') as log:
 		# first eval population
-		spinner = Spinner('')
+		spinner = Spinner('') # EVALUATE INITIAL POPULATION
 		log.write('Evaluating initial population...\n')
 		for q  in range(len(population)):
 			state = population[q].state
@@ -450,17 +452,20 @@ if __name__ == '__main__':
 		# now check for duplicates
 		spinner = Spinner('working ')
 		total_states = len(population)
+		gen_size = len(population)
+		# START MAKING NEW GENERATIONS
 		while(len(solutions) != 92):
+			elapsed_time = time.time() - start_time
 			if(i % 10 == 0):
 				print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
-				log.write('GENERATION: {} TOTAL STATES CREATED: {}\n'.format(i, total_states))
-				elapsed_time = time.time() - start_time
+				print(' SIZE OF GENERATION: {}'.format(gen_size))
 				print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-				log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-				log.write('-----------------------------------------------------------------')
 				print('-----------------------------------------------------------------')
 
-			max_child = 200000
+			log.write('GENERATION: {} TOTAL STATES CREATED: {}\n'.format(i, total_states))
+			log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			log.write('-----------------------------------------------------------------')
+			max_child = 50000
 			new_pop = []
 			best_child = [0 for k in range(n)]
 			#print('----- NEXT GENERATION -----')
@@ -476,6 +481,8 @@ if __name__ == '__main__':
 				child.state = eval_mutate(x.state,y.state,child.state)
 				# then add the guy
 				population.append(child)
+				total_states += 1 # add one to the running total
+
 				# check if this guy is a solution
 				unique = True
 				if(cal_fitness(child.state) == 0):
@@ -495,18 +502,16 @@ if __name__ == '__main__':
 				new_pop.append(child)
 				# some last checks
 				# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
-				if(x.children > 5):
+				if(x.children > child_limit):
 					#print('State {} died: {} {}'.format(population.index(x),cal_fitness(x.state),x.state))
 					population.remove(x)
 
-				if(y.children > 5):
+				if(y.children > child_limit):
 					#print('State {} died: {} {}'.format(population.index(y),cal_fitness(y.state),y.state))
 					population.remove(y)
 				spinner.next() # moved this guy here
 			# now see if the child is a solution
-
-			total_states += len(new_pop)
-			population = new_pop
+			gen_size = len(population)
 			i += 1
 			
 			#'''
