@@ -430,88 +430,99 @@ if __name__ == '__main__':
 	print(len(solutions))
 	debug = True
 	
-	# first eval population
-	spinner = Spinner('')
-	for q  in range(len(population)):
-		state = population[q].state
-		unique = True
-		if(cal_fitness(state) == 0):
-			# add the guy
-			for boy in solutions:
-				if(compare_state(state,boy)):
-					unique = False
-			if(unique):
-				solutions.append(state)
-				print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
-		spinner.next()
-	# now check for duplicates
-	spinner = Spinner('working ')
-	total_states = len(population)
-	while(len(solutions) != 92):
-		if(i % 10 == 0):
-			print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
-			elapsed_time = time.time() - start_time
-			print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-			print('-----------------------------------------------------------------')
-
-		max_child = 200000
-		new_pop = []
-		best_child = [0 for k in range(n)]
-		#print('----- NEXT GENERATION -----')
-		for u in range(max_child): # now to generate the guys
-			#print('pop {}'.format(len(population)))
-			x, y = get_two(population)
-			x.children += 1
-			y.children += 1
-			child = State(val=reproduce(x.state,y.state))
-			# now evaluate the child
-			child.state = eval_mutate(x.state,y.state,child.state)
-			# then add the guy
-			population.append(child)
-			# check if this guy is a solution
+	with open('log.txt','w') as log:
+		# first eval population
+		spinner = Spinner('')
+		log.write('Evaluating initial population...\n')
+		for q  in range(len(population)):
+			state = population[q].state
 			unique = True
-			if(cal_fitness(child.state) == 0):
+			if(cal_fitness(state) == 0):
 				# add the guy
-				for q in range(len(solutions)):
-					state = solutions[q]
-					if(compare_state(child.state,state)):
+				for boy in solutions:
+					if(compare_state(state,boy)):
 						unique = False
 				if(unique):
-					solutions.append(child.state)
-					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
-			#else:
-				#if(cal_fitness(child.state) < cal_fitness(best_child)):
-					#best_child = child
-					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
-			new_pop.append(child)
-			# some last checks
-			# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
-			if(x.children > 5):
-				#print('State {} died: {} {}'.format(population.index(x),cal_fitness(x.state),x.state))
-				population.remove(x)
+					solutions.append(state)
+					print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
+					log.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+			spinner.next()
+		# now check for duplicates
+		spinner = Spinner('working ')
+		total_states = len(population)
+		while(len(solutions) != 92):
+			if(i % 10 == 0):
+				print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
+				log.write('GENERATION: {} TOTAL STATES CREATED: {}\n'.format(i, total_states))
+				elapsed_time = time.time() - start_time
+				print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+				log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+				log.write('-----------------------------------------------------------------')
+				print('-----------------------------------------------------------------')
 
-			if(y.children > 5):
-				#print('State {} died: {} {}'.format(population.index(y),cal_fitness(y.state),y.state))
-				population.remove(y)
-			spinner.next() # moved this guy here
-		# now see if the child is a solution
+			max_child = 200000
+			new_pop = []
+			best_child = [0 for k in range(n)]
+			#print('----- NEXT GENERATION -----')
+			# SHUFFLE OUR POPULATION
+			r.shuffle(population)
+			for u in range(max_child): # now to generate the guys
+				#print('pop {}'.format(len(population)))
+				x, y = get_two(population)
+				x.children += 1
+				y.children += 1
+				child = State(val=reproduce(x.state,y.state))
+				# now evaluate the child
+				child.state = eval_mutate(x.state,y.state,child.state)
+				# then add the guy
+				population.append(child)
+				# check if this guy is a solution
+				unique = True
+				if(cal_fitness(child.state) == 0):
+					# add the guy
+					for q in range(len(solutions)):
+						state = solutions[q]
+						if(compare_state(child.state,state)):
+							unique = False
+					if(unique):
+						solutions.append(child.state)
+						print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
+						log.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+				#else:
+					#if(cal_fitness(child.state) < cal_fitness(best_child)):
+						#best_child = child
+						#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
+				new_pop.append(child)
+				# some last checks
+				# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
+				if(x.children > 5):
+					#print('State {} died: {} {}'.format(population.index(x),cal_fitness(x.state),x.state))
+					population.remove(x)
 
-		total_states += len(new_pop)
-		population = new_pop
-		i += 1
-		
-		#'''
+				if(y.children > 5):
+					#print('State {} died: {} {}'.format(population.index(y),cal_fitness(y.state),y.state))
+					population.remove(y)
+				spinner.next() # moved this guy here
+			# now see if the child is a solution
 
-	# after finding solutions write them to a file
-	with open('solutions.txt', 'w') as file:
-		for sol in solutions:
-			file.write('{}\n'.format(sol))
-		file.close()
+			total_states += len(new_pop)
+			population = new_pop
+			i += 1
+			
+			#'''
 
-	print('DONE!')
-	elapsed_time = time.time() - start_time
-	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+		# after finding solutions write them to a file
+		with open('solutions.txt', 'w') as file:
+			for sol in solutions:
+				file.write('{}\n'.format(sol))
+			file.close()
 
+		log.write('DONE\n')
+		print('DONE!')
+		elapsed_time = time.time() - start_time
+		print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+		log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		log.close()
 
 
 
