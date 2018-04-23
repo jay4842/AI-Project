@@ -23,7 +23,6 @@ import numpy as np
 from progress.spinner import Spinner
 import datetime
 import time
-
 # http://oeis.org/A000170
 # The number of solutions is OEIS sequence A000170:
 # 1, 2, 3, 4, ...
@@ -286,12 +285,6 @@ def get_two(population):
 	if(y == x):
 		while(y == x):
 			y = r.randint(0,len(population))
-	while((cal_fitness(population[x-1]) > 5) and (cal_fitness(population[y-1]) > 5)):
-		x = r.randint(0,len(population))
-		y = r.randint(0,len(population))
-		if(y == x):
-			while(y == x):
-				y = r.randint(0,len(population))
 
 	return population[x-1], population[y-1]
 
@@ -369,6 +362,7 @@ def med_mutate(child):
 	sub_1_1 = single_mutate(state_1)
 	sub_1_2 = single_mutate(state_1)
 	return tournament_select(sub_1_1,sub_1_2)
+
 # for getting a really different child
 def heavy_mutate(child):
 	state_1 = single_mutate(child)
@@ -380,11 +374,39 @@ def heavy_mutate(child):
 	sub_2_1 = single_mutate(state_2)
 	sub_2_2 = single_mutate(state_2)
 
-	sub_1_w = tournament_select(sub_1_1,sub_1_2)
-	sub_2_w = tournament_select(sub_2_1,sub_2_2)
+	sub_1_w = three_way_tournament(sub_1_1,sub_1_2)
+	sub_2_w = three_way_tournament(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
+#
+def eval_mutate(x,y,child):
+	fit   = cal_fitness(child)
+	fit_a = cal_fitness(x)
+	fit_b = cal_fitness(y)
+	if((fit_a < fit) or (fit_b < fit)):
+		# if our child is not stronger than the others generate a new guy
+		if(fit > 0 and fit < 2):
+			# slight or maybe med
+			if(r.randint(0,100) > chance):
+				child = med_mutate(child)
+			else:
+				child = slight_mutate(child)
+		# now check the medium chance condition		
+		elif(fit > 2 and fit < (n-(n/2) * 2)):
+			if(r.randint(0,100) > chance):
+				child = heavy_mutate(child)
+			else:
+				child = med_mutate(child)
+				
+		# If we are that unfit heavy mutation
+		else:
+			child = heavy_mutate(child)
+			
+			# else there is still a chance of a slight mutation
+	else:
+		if(r.randint(0,100) > chance):
+			child = slight_mutate(child)
 
-
+	return child
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	start_time = time.time()
@@ -399,6 +421,7 @@ if __name__ == '__main__':
 	debug = True
 	
 	# first eval population
+	spinner = Spinner('')
 	for state in population:
 		unique = True
 		if(cal_fitness(state) == 0):
@@ -409,53 +432,28 @@ if __name__ == '__main__':
 			if(unique):
 				solutions.append(state)
 				print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
-
+		spinner.next()
 	# now check for duplicates
 	spinner = Spinner('working ')
 	while(len(solutions) != 92):
 		total_states = len(population)
-		if(i % 1000 == 0):
-			print('GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
-			elapsed_time = time.time() - start_time
-			print('Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 		
+		print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
+		elapsed_time = time.time() - start_time
+		print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		print('-----------------------------------------------------------------')
 
-		max_child = 100000
-		new_pop = []
+		max_child = 50000
+		#new_pop = []
 		best_child = [0 for k in range(n)]
-		#if(debug): print('NEXT GENERATION')
+		#print('----- NEXT GENERATION -----')
 		for x in range(max_child): # now to generate the guys
 			x, y = get_two(population) 
 			child = reproduce(x,y)
-			# Remember: we only want to keep fit boys
-			fit   = cal_fitness(child)
-			fit_a = cal_fitness(x)
-			fit_b = cal_fitness(y)
-			if((fit_a < fit) or (fit_b < fit)):
-				# if our child is not stronger than the others generate a new guy
-				if(fit > 0 and fit < 2):
-					# slight or maybe med
-					if(r.randint(0,100) > chance):
-						child = med_mutate(child)
-					else:
-						child = slight_mutate(child)
-				# now check the medium chance condition		
-				elif(fit > 2 and fit < (n-(n/2) * 2)):
-					if(r.randint(0,100) > chance):
-						child = heavy_mutate(child)
-					else:
-						child = med_mutate(child)
-				
-				# If we are that unfit heavy mutation
-				else:
-					child = heavy_mutate(child)
-			
-			# else there is still a chance of a slight mutation
-			else:
-				if(r.randint(0,100) > chance):
-					child = slight_mutate(child)
+			# now evaluate the child
+			child = eval_mutate(x,y,child)
 			# then add the guy
-			new_pop.append(child)
+			population.append(child)
 			# check if this guy is a solution
 			unique = True
 			if(cal_fitness(child) == 0):
@@ -465,7 +463,7 @@ if __name__ == '__main__':
 						unique = False
 				if(unique):
 					solutions.append(child)
-					print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),child))
+					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child))
 			else:
 				if(cal_fitness(child) < cal_fitness(best_child)):
 					best_child = child
@@ -473,7 +471,7 @@ if __name__ == '__main__':
 			spinner.next() # moved this guy here
 		# now see if the child is a solution
 
-		population = new_pop
+		#population = new_pop
 		i += 1
 		total_states += len(population)
 		#'''
@@ -487,3 +485,9 @@ if __name__ == '__main__':
 	print('DONE!')
 	elapsed_time = time.time() - start_time
 	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+
+
+
+
+
+
