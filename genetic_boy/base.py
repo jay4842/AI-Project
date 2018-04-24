@@ -23,6 +23,8 @@ import numpy as np
 from progress.spinner import Spinner
 import datetime
 import time
+import os
+
 # http://oeis.org/A000170
 # The number of solutions is OEIS sequence A000170:
 # 1, 2, 3, 4, ...
@@ -30,17 +32,40 @@ import time
 # 95815104,666090624,4968057848,39029188884,314666222712,2691008701644,
 # 24233937684440,227514171973736,2207893435808352,22317699616364044,234907967154122528
 
+def make_dir(directory):
+	directory = "".join(str(x) for x in directory)
+	try:
+		os.stat(directory)
+	except FileNotFoundError:
+		try:
+			os.mkdir(directory)
+		except FileNotFoundError:
+			subDir = directory.split('/')
+			while(subDir[-2] == ''):
+				subDir = subDir[:-2]
+			newDir = ""
+			for x in range(len(subDir)-2):
+				newDir += (subDir[x])
+				newDir += ('/')
+			make_dir(newDir)
+			os.mkdir(directory)
+
 # just to hold our states
 class State():
 	
 	# can have a state passed as a parameter
 	#  or randomly create it
 	def __init__(self,n=8,val=None):
+		self.children = 0
+		self.mutation = None
 		if(val == None):
 			self.state = generate_state(n)
+			if(r.randint(0,100) > 80):
+				self.state = slight_mutate(self.state)
+				self.mutation = 'Slight'
 		else:
 			self.state = val
-		self.children = 0
+		
 
 # this will generate a state of n queens
 def generate_state(n=8):
@@ -51,6 +76,7 @@ def generate_state(n=8):
 	#  space at i can be from 0 to n
 	for i in range(0,n):
 		space[i] = r.randint(0,n-1)
+
 	return space
 # thats it nothing special
 
@@ -399,137 +425,210 @@ def heavy_mutate(child):
 	sub_2_1 = single_mutate(state_2)
 	sub_2_2 = single_mutate(state_2)
 
-	sub_1_w = three_way_tournament(sub_1_1,sub_1_2)
-	sub_2_w = three_way_tournament(sub_2_1,sub_2_2)
+	sub_1_w = tournament_select(sub_1_1,sub_1_2)
+	sub_2_w = tournament_select(sub_2_1,sub_2_2)
 	return tournament_select(sub_1_w,sub_2_w)	
 #
 
 # This will be a bridge for testing out different ways to get fit children!
 def eval_mutate(x,y,child,n=8,chance=75):
-	fit   = cal_fitness(child)
-	fit_a = cal_fitness(x)
-	fit_b = cal_fitness(y)
+	fit   = cal_fitness(child.state)
+	fit_a = cal_fitness(x.state)
+	fit_b = cal_fitness(y.state)
 
 	if(r.randint(0,100) > chance):
 		if(r.randint(0,100) > 50):
-			child = slight_mutate(child)
+			child.state = slight_mutate(child.state)
+			child.mutation = 'Slight'
+		elif(r.randint(0,100) > 45):
+			child.state = med_mutate(child.state)
+			child.mutation = 'Medium'
 		else:
-			child = med_mutate(child)
+			child.state = heavy_mutate(child.state)
+			child.mutation = 'Heavy'
 
 	return child
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	start_time = time.time()
+	make_dir('state_logs/')
 	child_limit = 7
 	n = 8
 	chance = 65
 	i = 0
 	solutions = []
-	population = generate_pop(pop=50000,n=8)
+	state_log = open('state_logs/initial_state_log.txt','w')
+	population = generate_pop(pop=10000,n=8)
 	# 92
 	
 	print(len(solutions))
 	debug = True
+	
+	best_child  = cal_fitness(population[0].state)
+	worst_child = cal_fitness(population[0].state)
 	# open our log
 	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
-	with open('log.txt','w') as log:
-		# first eval population
-		spinner = Spinner('') # EVALUATE INITIAL POPULATION
-		log.write('Evaluating initial population...\n')
-		for q  in range(len(population)):
-			state = population[q].state
+	log_ = open('log_.txt','w')
+	# first eval population
+	spinner = Spinner('') # EVALUATE INITIAL POPULATION
+	log_.write('Evaluating initial population...\n')
+	for q  in range(len(population)):
+		curr_time = time.time()
+		state = population[q].state
+		state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+		state_log.write('fit[{}] {} created with a mutation: {}!\n'.format(cal_fitness(state),state,population[q].mutation))
+		state_log.write('---------------------------------------------------\n')
+		unique = True
+		fit = cal_fitness(state)
+
+		if(fit == 0):
+			# add the guy
+			for boy in solutions:
+				if(compare_state(state,boy)):
+					unique = False
+			if(unique):
+				solutions.append(state)
+				print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
+				log_.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+		else:
+			if(fit < worst_child):
+				worst_child = fit
+			elif(fit > best_child):
+				best_child = fit
+		spinner.next()
+	# now check for duplicates
+	spinner = Spinner('working ')
+	total_states = len(population)
+	gen_size = len(population)
+	state_log.close()
+	# START MAKING NEW GENERATIONS
+	while(len(solutions) != 92):
+		state_log = open('state_logs/state_log_{}.txt'.format(i),'w')
+		elapsed_time = time.time() - start_time
+		if(i % 10 == 0):
+			print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
+			print(' SIZE OF GENERATION: {}'.format(gen_size))
+			print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print('-----------------------------------------------------------------')
+		log_.write('GENERATION: {} TOTAL STATES CREATED: {}\n'.format(i, total_states))
+		log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		log_.write('-----------------------------------------------------------------\n')
+		max_child = 10000
+		new_pop = []
+		
+		#print('----- NEXT GENERATION -----')
+		# SHUFFLE OUR POPULATION
+		r.shuffle(population)
+		for u in range(max_child): # now to generate the guys
+			#print('pop {}'.format(len(population)))
+			x, y = get_two(population)
+			#
+			x.children += 1
+			y.children += 1
+			child = State(val=reproduce(x.state,y.state))
+			# now evaluate the child
+			child = eval_mutate(x,y,child)
+			# More log stuff here
+			curr_time = time.time()
+			state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+			state_log.write('Parents: {} [{}] and {} [{}] created:\n'.format(x.state,x.mutation,y.state,y.mutation))
+			state_log.write('fit[{}] {} created with a mutation: {}!\n'.format(cal_fitness(child.state),child.state,child.mutation))
+			state_log.write('---------------------------------------------------\n')
+			# then add the guy
+			population.append(child)
+			total_states += 1 # add one to the running total
+
+			# check if this guy is a solution
 			unique = True
-			if(cal_fitness(state) == 0):
+			if(cal_fitness(child.state) == 0):
 				# add the guy
-				for boy in solutions:
-					if(compare_state(state,boy)):
+				for q in range(len(solutions)):
+					state = solutions[q]
+					if(compare_state(child.state,state)):
 						unique = False
 				if(unique):
-					solutions.append(state)
-					print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
-					log.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
-			spinner.next()
-		# now check for duplicates
-		spinner = Spinner('working ')
-		total_states = len(population)
+					solutions.append(child.state)
+					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
+					log_.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+			else:
+				child_fit = cal_fitness(child.state)
+				if(child_fit < worst_child):
+					worst_child = child_fit
+				elif(child_fit > best_child):
+					best_child = child_fit
+
+					#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
+			new_pop.append(child)
+			# some last checks
+			# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
+			if(x.children > child_limit):
+				curr_time = time.time()
+				state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+				state_log.write('State {} died: {} {}\n'.format(population.index(x),cal_fitness(x.state),x.state))
+				state_log.write('---------------------------------------------------\n')
+				population.remove(x)
+
+			if(y.children > child_limit):
+				curr_time = time.time()
+				state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+				state_log.write('State {} died: {} {}\n'.format(population.index(y),cal_fitness(y.state),y.state))
+				population.remove(y)
+				state_log.write('---------------------------------------------------\n')
+			spinner.next() # moved this guy here
+		# now see if the child is a solution
 		gen_size = len(population)
-		# START MAKING NEW GENERATIONS
-		while(len(solutions) != 92):
-			elapsed_time = time.time() - start_time
-			if(i % 10 == 0):
-				print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(i, total_states))
-				print(' SIZE OF GENERATION: {}'.format(gen_size))
-				print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-				print('-----------------------------------------------------------------')
+		i += 1
 
-			log.write('GENERATION: {} TOTAL STATES CREATED: {}\n'.format(i, total_states))
-			log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-			log.write('-----------------------------------------------------------------')
-			max_child = 50000
-			new_pop = []
-			best_child = [0 for k in range(n)]
-			#print('----- NEXT GENERATION -----')
-			# SHUFFLE OUR POPULATION
-			r.shuffle(population)
-			for u in range(max_child): # now to generate the guys
-				#print('pop {}'.format(len(population)))
-				x, y = get_two(population)
-				x.children += 1
-				y.children += 1
-				child = State(val=reproduce(x.state,y.state))
-				# now evaluate the child
-				child.state = eval_mutate(x.state,y.state,child.state)
-				# then add the guy
-				population.append(child)
-				total_states += 1 # add one to the running total
+		# States that are unfit will be killed to preserve a survival of the fittest style.
+		# Here parents that have a fitness that is too low will be killed
 
-				# check if this guy is a solution
-				unique = True
-				if(cal_fitness(child.state) == 0):
-					# add the guy
-					for q in range(len(solutions)):
-						state = solutions[q]
-						if(compare_state(child.state,state)):
-							unique = False
-					if(unique):
-						solutions.append(child.state)
-						print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
-						log.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
-				#else:
-					#if(cal_fitness(child.state) < cal_fitness(best_child)):
-						#best_child = child
-						#if(debug): print('best child: {} {}'.format(cal_fitness(best_child),best_child))
-				new_pop.append(child)
-				# some last checks
-				# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
-				if(x.children > child_limit):
-					#print('State {} died: {} {}'.format(population.index(x),cal_fitness(x.state),x.state))
-					population.remove(x)
+		medium_fit = [f for f in range(best_child,worst_child)]
+		medium_fit = len(medium_fit) / 2
 
-				if(y.children > child_limit):
-					#print('State {} died: {} {}'.format(population.index(y),cal_fitness(y.state),y.state))
-					population.remove(y)
-				spinner.next() # moved this guy here
-			# now see if the child is a solution
-			gen_size = len(population)
-			i += 1
-			
-			#'''
+		for q in range(len(population)-1):
+			try:
+				fit = cal_fitness(population[q].state)
+				# If the fitness is less than or equal to the worst child it dies
+				if(fit >= worst_child):
+					curr_time = time.time()
+					state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+					state_log.write('State {} died: {} {}\n'.format(population[q].state,fit))
+					state_log.write('---------------------------------------------------\n')
+					population.remove(population[q])
+					q -= 1
+				# If the fitness is less than the medium there is a chance that it can be killed
+				elif(fit > medium_fit):
+					if(r.randint(0,100) > 60):
+						curr_time = time.time()
+						state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
+						state_log.write('State {} died: {} {}\n'.format(population[q].state,fit))
+						state_log.write('---------------------------------------------------\n')
+						population.remove(population[q])
+						q -= 1
+			except Exception as e:
+				break # break out of our loop here
+		
+		best_child  = cal_fitness(population[0].state)
+		worst_child = cal_fitness(population[0].state)
 
-		# after finding solutions write them to a file
-		with open('solutions.txt', 'w') as file:
-			for sol in solutions:
-				file.write('{}\n'.format(sol))
-			file.close()
-
-		log.write('DONE\n')
-		print('DONE!')
+		# kill parents
 		elapsed_time = time.time() - start_time
-		print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-		log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-		log.close()
+		state_log.write('Iteration Complete!\nTime passed {}\n\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		state_log.close()	
+		#'''
 
+	# after finding solutions write them to a file
+	with open('solutions.txt', 'w') as file:
+		for sol in solutions:
+			file.write('{}\n'.format(sol))
+		file.close()
 
-
-
+	log.write('DONE\n')
+	state_log.write('DONE\n')
+	print('DONE!')
+	elapsed_time = time.time() - start_time
+	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+	log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+	log.close()
+	state_log.close()
 
