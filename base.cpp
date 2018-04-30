@@ -10,6 +10,7 @@ void generate_State();
 void create_Board(int [], int);
 void print_Board(int **, int);
 void attack_pairs(int **, int);
+void attack_pairs(int [], int);
 
 // --main()--
 int main()
@@ -45,6 +46,7 @@ void generate_State()
     cout << endl << endl;
     
     create_Board(space, n);
+    attack_pairs(space, n);
 }// end generate_State()
 
 // --create_Board(int [], int)--
@@ -138,4 +140,28 @@ void attack_pairs(int **board, int n)
     delete countC;
     delete countD;
     delete countTotal;
-}// end arrack_pairs(int **, int)
+}// end attack_pairs(int **, int)
+
+void attack_pairs(int state[], int n)
+{
+    int count = 0;
+
+    for(int i = 0; i < n; i++)
+    {
+        for(int j = 1; j < n; j++)
+        {
+            if(i == (n - 1))
+                break;
+            else
+            {
+                if(state[i] == state[j])
+                {
+                    cout << endl << state[i] << " " << state[j] << endl;
+                    count += 1;
+                }
+            }
+        }
+    }
+    
+    cout << endl << "count: " << count;
+}

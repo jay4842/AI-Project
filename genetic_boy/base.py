@@ -227,6 +227,39 @@ def single_mutate(state):
 
 	return state
 
+# double mutate, switch two values (total of four) in state
+def double_mutate(state):
+	w = r.randint(0, len(state))
+	x = r.randint(0, len(state))
+	y = r.randint(0, len(state))
+	z = r.randint(0, len(state))
+
+	if(w == x and w == y and w == z):
+		while(w == x and w == y and w == z):
+			w = r.randint(0, len(state))
+	if(x == y and x == z):
+		while(x == y and x == z):
+			x = r.randint(0, len(state))
+	if(y == z):
+		while(y == z):
+			y = r.randint(0, len(state))
+
+	w -= 1
+	x -= 1
+	y -= 1
+	z -= 1
+
+	temp = state[w]
+	state[x] = state[w]
+	state[x] = temp
+
+	temp = state[y]
+	state[y] = state[z]
+	state[z] = temp
+
+	return state
+#end double_mutate
+
 # tournament select
 #  returns the fittest parent
 def tournament_select(a,b):
@@ -269,7 +302,6 @@ def three_way_tournament(a,b):
 
 
 	return child
-#
 
 # reproduce
 
