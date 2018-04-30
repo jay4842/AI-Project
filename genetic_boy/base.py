@@ -43,6 +43,7 @@ def factorial(n):
 def max_clash(n):
 	return ( factorial(n) / (factorial(2) * factorial(n-2)) )
 
+# make a folder, sometimes acts weird?
 def make_dir(directory):
 	directory = "".join(str(x) for x in directory)
 	try:
