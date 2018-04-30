@@ -187,27 +187,30 @@ def compare_state(a,b): # check if two states are equal
 
 # Return two parents and make sure they are not the same
 def get_two(population,fit_thresh):
-	size = len(population)
+	size = len(population)-1
 	x = r.randint(0,size)
 	y = r.randint(0,size)
 	if(y == x):
 		while(y == x):
 			y = r.randint(0,len(population))
 
-	while(population[x-1].fit > fit_thresh and population[y-1].fit > fit_thresh):
+	while(population[x].fit > fit_thresh and population[y].fit > fit_thresh):
 		try:
-			del population[x-1]
-			del population[y-1]
-			size = len(population)
+			del population[x]
+			if(y == 0):
+				del population[y] # cause we removed already
+			else:
+				del population[y-1] # cause we removed already
+			size = len(population)-1
 		except Exception as e:
-			print('x = {0} y = {1} len({2}) [Error] {3}'.format(x-1,y-1,size,e))
+			print('x = {0} y = {1} len({2}) [Error] {3}'.format(x,y,size,e))
 		# 	
 		x = r.randint(0,size)
 		y = r.randint(0,size)
 		if(y == x):
 			while(y == x):
 				y = r.randint(0,size)
-	return population, population[x-1], population[y-1]
+	return population, population[x], population[y]
 
 # mutate helpers
 #  swaps two values in a state
@@ -319,7 +322,10 @@ def reproduce(a,b):
 # These also might change if we dont find children
 # the mutate functions
 def slight_mutate(child):
-	return single_mutate(child)
+	if(r.randint(0,100) > 50):
+		return single_mutate(child)
+	else:
+		return double_mutate(child)
 
 def med_mutate(child):
 	# only do one side of the guy
@@ -368,10 +374,12 @@ def eval_mutate(x,y,child,chance=75):
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	total_sols = [1 ,0,0,2,10,4,40,92,352,724,2680,14200,73712,365596,2279184,14772512]
+	max_seconds = 5
 	start_time = time.time()
+	end_time = start_time + 60 * max_seconds
 	make_dir('state_logs/')
 	child_limit = 7
-	n = 7
+	n = 8
 	max_boys = max_clash(n)
 	chance = 65
 	fit_thresh = max_boys - 10
@@ -423,7 +431,7 @@ if __name__ == '__main__':
 	gen_size = len(population)
 	state_log.close()
 	# START MAKING NEW GENERATIONS
-	while(len(solutions) != total_sols[n-1]):
+	while(len(solutions) != total_sols[n-1] and time.time() < end_time):
 		state_log = open('state_logs/state_log_{}.txt'.format(i),'w')
 		elapsed_time = time.time() - start_time
 		if(gen % 5 == 0):
