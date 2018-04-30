@@ -89,7 +89,7 @@ def make_space(state):
 
 	for j in range(0,n): # show the board for now
 		for i in range(0,n):
-			if(j == space[i]):
+			if(j == state[i]):
 				temp_space[i][j] = 1
 
 	return temp_space
@@ -278,6 +278,26 @@ def count_attack_pairs(mat):
 
 # END OF ATTACK HELPERS # # # # # # # # # 
 
+def check_clashes(space):
+	clashes = 0;
+	# calculate row and column clashes
+	# just subtract the unique length of array from total length of array
+	# [1,1,1,2,2,2] - [1,2] => 4 clashes
+	row_col_clashes = abs(len(space) - len(np.unique(space)))
+	clashes += row_col_clashes
+
+	# calculate diagonal clashes
+	for i in range(len(space)):
+		for j in range(len(space)):
+			if ( i != j):
+				dx = abs(i-j)
+				dy = abs(space[i] - space[j])
+				if(dx == dy):
+					clashes += 1
+
+
+	return clashes
+
 # setup the fitness function
 def cal_fitness(space): # RETURN THE NUMBER OF ATTACKS FOUND
 	n = len(space)
@@ -285,13 +305,8 @@ def cal_fitness(space): # RETURN THE NUMBER OF ATTACKS FOUND
 	# make a temporary array to hold the state, making evaluating easy
 	temp_space = [[0 for i in range(n)] for j in range(n)]
 	#print(temp_space)
-
-	for j in range(0,n): # show the board for now
-		for i in range(0,n):
-			if(j == space[i]):
-				temp_space[i][j] = 1
 	
-	return count_attack_pairs(temp_space)
+	return check_clashes(space)
 
 # more stuff
 # GENERATE A RANDOM POPULATION OF STATES
@@ -431,7 +446,7 @@ def heavy_mutate(child):
 #
 
 # This will be a bridge for testing out different ways to get fit children!
-def eval_mutate(x,y,child,n=8,chance=75):
+def eval_mutate(x,y,child,chance=75):
 	fit   = cal_fitness(child.state)
 	fit_a = cal_fitness(x.state)
 	fit_b = cal_fitness(y.state)
@@ -450,16 +465,20 @@ def eval_mutate(x,y,child,n=8,chance=75):
 	return child
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
+	total_sols = [1 ,0,0,2,10,4,40,92,352,724,2680,14200,73712,365596,2279184,14772512]
 	start_time = time.time()
 	make_dir('state_logs/')
 	child_limit = 7
-	n = 8
+	n = 7
 	chance = 65
 	i = 0
 	solutions = []
 	state_log = open('state_logs/initial_state_log.txt','w')
-	population = generate_pop(pop=10000,n=8)
+	population = generate_pop(pop=10000,n=n)
 	# 92
+	
+	# print_board(make_space(population[0].state))
+	# print(check_clashes(population[0].state))
 	
 	print(len(solutions))
 	debug = True
@@ -472,7 +491,7 @@ if __name__ == '__main__':
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
 	log_.write('Evaluating initial population...\n')
-	for q  in range(len(population)):
+	for q in range(len(population)):
 		curr_time = time.time()
 		state = population[q].state
 		state_log.write('Event [{}]\n'.format(time.strftime("%H:%M:%S", time.gmtime(curr_time))))
@@ -488,8 +507,8 @@ if __name__ == '__main__':
 					unique = False
 			if(unique):
 				solutions.append(state)
-				print('{}/92 FOUND SOLUTION: {}'.format(len(solutions),state))
-				log_.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+				print('{}/{} FOUND SOLUTION: {}'.format(len(solutions),total_sols[n-1],state))
+				log_.write('{}/{} FOUND SOLUTION: {}\n'.format(len(solutions),total_sols[n-1],state))
 		else:
 			if(fit < worst_child):
 				worst_child = fit
@@ -502,7 +521,7 @@ if __name__ == '__main__':
 	gen_size = len(population)
 	state_log.close()
 	# START MAKING NEW GENERATIONS
-	while(len(solutions) != 92):
+	while(len(solutions) != total_sols[n-1]):
 		state_log = open('state_logs/state_log_{}.txt'.format(i),'w')
 		elapsed_time = time.time() - start_time
 		if(i % 10 == 0):
@@ -548,8 +567,8 @@ if __name__ == '__main__':
 						unique = False
 				if(unique):
 					solutions.append(child.state)
-					print(' {}/92 FOUND SOLUTION: {}'.format(len(solutions),child.state))
-					log_.write('{}/92 FOUND SOLUTION: {}\n'.format(len(solutions),state))
+					print('{}/{} FOUND SOLUTION: {}'.format(len(solutions),total_sols[n-1],state))
+					log_.write('{}/{} FOUND SOLUTION: {}\n'.format(len(solutions),total_sols[n-1],state))
 			else:
 				child_fit = cal_fitness(child.state)
 				if(child_fit < worst_child):
@@ -615,7 +634,7 @@ if __name__ == '__main__':
 		elapsed_time = time.time() - start_time
 		state_log.write('Iteration Complete!\nTime passed {}\n\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 		state_log.close()	
-		#'''
+		
 
 	# after finding solutions write them to a file
 	with open('solutions.txt', 'w') as file:
@@ -623,12 +642,12 @@ if __name__ == '__main__':
 			file.write('{}\n'.format(sol))
 		file.close()
 
-	log.write('DONE\n')
-	state_log.write('DONE\n')
+	log_.write('DONE\n')
+	#state_log.write('DONE\n')
 	print('DONE!')
 	elapsed_time = time.time() - start_time
 	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-	log.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-	log.close()
-	state_log.close()
+	log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+	log_.close()
+	#state_log.close()#'''
 
