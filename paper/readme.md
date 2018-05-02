@@ -20,6 +20,11 @@ Summary of using:
 #### 2.4 The Selection Operator
 #### 2.5 The Crossover Operator
 #### 2.6 The Mutation Operator
+- 2.6.1 Light Mutation
+- 2.6.2 Medium Mutation
+- 2.6.3 Heavy Mutation
 ### 3 Experiment
-### 4 Results
-### 5 Conclusion
+### 4 Discussion
+### 5 Future
+### 6 Results
+### 7 Conclusion
