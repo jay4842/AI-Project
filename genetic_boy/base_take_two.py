@@ -194,24 +194,15 @@ def get_two(population,fit_thresh):
 	if(y == x):
 		while(y == x):
 			y = r.randint(0,len(population))
-
-	while(population[x].fit > fit_thresh or population[y].fit > fit_thresh):
-		try:
-			del population[x]
-			if(y == 0):
-				del population[y] # cause we removed already
-			else:
-				del population[y-1] # cause we removed already
-			size = len(population)-1
-		except Exception as e:
-			print('x = {0} y = {1} len({2}) [Error] {3}'.format(x,y,size,e))
-		# 	
+	# we still want to get fit populations
+	'''while(population[x-1].fit > fit_thresh or population[y-1].fit > fit_thresh):
 		x = r.randint(0,size)
 		y = r.randint(0,size)
 		if(y == x):
 			while(y == x):
-				y = r.randint(0,size)
-	return population, population[x], population[y]
+				y = r.randint(0,size)#'''
+
+	return x-1, y-1
 
 # mutate helpers
 #  swaps two values in a state
@@ -307,6 +298,21 @@ def three_way_tournament(a,b):
 
 	return child
 
+# one point crossover
+def one_point_crossover(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+	
+	#print(a)
+	#print(b)
+
+	n = len(a)
+	child_1 = a[0:int(n/2)] + b[int(n/2):]
+	child_2 = b[0:int(n/2)] + a[int(n/2):]
+	# # # # #
+	return child_1,child_2
+
 # reproduce
 
 # simple three way tournament crossover
@@ -373,13 +379,23 @@ def eval_mutate(x,y,child,target,chance=95):
 				child.mutation = 'Heavy'
 
 	return child
+
+def is_solution(state,solutions,max_boys):
+	# add the guy
+	for q in range(len(solutions)):
+		if(compare_state(state,solutions[q])):
+			return False
+
+	return True # if we get here its a solution
+
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
 	total_sols = [1 ,0,0,2,10,4,40,92,352,724,2680,14200,73712,365596,2279184,14772512]
 	max_seconds = 5
-	
 	n = input('input n -> ');
 	n = int(n)
+	pop = input('input pop -> ')
+	pop = int(pop)
 	start_time = time.time()
 	end_time = start_time + 60 * max_seconds
 	make_dir('state_logs/')
@@ -391,9 +407,10 @@ if __name__ == '__main__':
 	i = 0
 	gen = 0
 	solutions = []
+	pop_size = pop
 	#state_log = open('state_logs/initial_state_log.txt','w')
-	population = generate_pop(pop=5000,n=n)
-	max_child = 5000
+	population = generate_pop(pop=pop_size,n=n)
+	max_child = pop_size
 	# 92
 	
 	# print_board(make_space(population[0].state))
@@ -401,165 +418,120 @@ if __name__ == '__main__':
 	
 	print(len(solutions))
 	debug = True
-	
-	best_child  = population[0].fit
-	worst_child = population[0].fit
+
 	# open our log
 	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
-	log_ = open('log_.txt','w')
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
-	log_.write('Evaluating initial population...\n')
-	for q in range(len(population)):
-		state = population[q].state
-		unique = True
-		fit = population[q].fit
-
-		if(fit == max_boys):
-			# add the guy
-			for boy in solutions:
-				if(compare_state(state,boy)):
-					unique = False
-			if(unique):
-				solutions.append(state)
-				print('{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state))
-				log_.write('{}/{} FOUND SOLUTION: {}\n'.format(len(solutions),total_sols[n-1],state))
-		else:
-			if(fit < worst_child):
-				worst_child = fit
-			elif(fit > best_child):
-				best_child = fit
-		spinner.next()
-		i += 1
-	# now check for duplicates
-	spinner = Spinner('working ')
-	total_states = len(population)
-	gen_size = len(population)
-	#state_log.close()
-	# START MAKING NEW GENERATIONS
-	while(len(solutions) != total_sols[n-1]):
-		elapsed_time = time.time() - start_time
-		if(gen % 5 == 0):
-			print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(gen, total_states))
-			print(' SIZE OF GENERATION: {}'.format(gen_size))
-			print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-			print('-----------------------------------------------------------------')
-
-			# life will get 
-			if(gen > 0 and fit_thresh > max_boys-3):
-				fit_thresh -= 1
-		new_pop = []
-		
-		#print('----- NEXT GENERATION -----')
-		# SHUFFLE OUR POPULATION
-		r.shuffle(population) # better random selection
-		for u in range(max_child): # now to generate the guys
-			#print('pop {}'.format(len(population)))
-			population, x, y = get_two(population,fit_thresh) # can also delete unfit parents
-			#
-			x.children += 1
-			y.children += 1
-			child = State(val=reproduce(x.state,y.state))
-			# now evaluate the child
-			child = eval_mutate(x,y,child,max_boys)
-			# More log stuff here
-			i += 1
-			# then add the guy
-			population.append(child)
-			total_states += 1 # add one to the running total
-
-			# check if this guy is a solution
+	with open('state_logs/log.txt','w') as log_:
+		log_.write('Evaluating initial population...\n')
+		for q in range(len(population)):
+			state = population[q].state
 			unique = True
-			if(child.fit == max_boys):
-				# add the guy
-				for q in range(len(solutions)):
-					state = solutions[q]
-					if(compare_state(child.state,state)):
-						unique = False
-				if(unique):
-					solutions.append(child.state)
-					print('{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state))
-					log_.write('{}/{} FOUND SOLUTION: {}\n'.format(len(solutions),total_sols[n-1],state))
-			else:
-				child_fit = child.fit
-				if(child_fit < worst_child):
-					worst_child = child_fit
-				elif(child_fit > best_child):
-					best_child = child_fit
+			fit = population[q].fit
 
-			# some last checks
-			# WE DONT WANT THE PARENTS TO HAVE MORE THAN 4 CHILDREN
-			if(x.children > child_limit):
-				population.remove(x)
+			if(fit == max_boys):
+				if(is_solution(state,solutions,max_boys)):
+					solutions.append(state)
+					elapsed_time = time.time() - start_time
+					print_board(make_space(state))
+					out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state)
+					print(out)
+					print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+					log_.write(out + '\n')
+					#log_.flush()
 
-			if(y.children > child_limit):
-				population.remove(y)
-			spinner.next() # moved this guy here
-		# now see if the child is a solution
+			spinner.next()
+			i += 1
+		# now check for duplicates
+		spinner = Spinner('working ')
+		total_states = len(population)
 		gen_size = len(population)
+		#state_log.close()
+		# START MAKING NEW GENERATIONS
+		while(len(solutions) != total_sols[n-1]):
+			elapsed_time = time.time() - start_time
+			if(gen % 10 == 0):
+				#print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(gen, total_states))
+				#print(' SIZE OF GENERATION: {}'.format(gen_size))
+				#print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+				#print('-----------------------------------------------------------------')
 
-		#strongest = population[0]
-		'''killed = 0
-		#for q in population:
-			# first find the fittest parent
-			#if(q.fit > strongest.fit):
-				#strongest = q
-		# then go through and delete states with a fitness that is less than 3 of the strongest
-		for q in population:
-			if(q.fit < fit_thresh):
-				population.remove(q)
-				killed += 1
+				# life will get harder
+				if(gen > 0 and fit_thresh > max_boys-3):
+					fit_thresh -= 1
+			new_pop = []
+			
+			#print('----- NEXT GENERATION -----')
+			# SHUFFLE OUR POPULATION
+			r.shuffle(population) # better random selection
+			for u in range(max_child): # now to generate the guys
+				#print('pop {}'.format(len(population)))
+				x, y = get_two(population,fit_thresh) # can also delete unfit parents
+				#
+				parent_1 = population[x]
+				parent_2 = population[y]
 
-		print('Killed {} states!'.format(killed))#'''
-		# now pick the two strongest!
-		strongest_1 = population[0]
-		for q in population:
-			# first find the fittest parent
-			if(q.fit > strongest_1.fit):
-				strongest_1 = q
-		strongest_2 = population[0]
-		for q in population:
-			if(q.fit > strongest_2.fit and q.fit != strongest_1.fit):
-				strongest_2 = q
+				s1,s2 = one_point_crossover(parent_1.state,parent_2.state)
+				c1 = State(n=n,val=s1)
+				c2 = State(n=n,val=s2)
+				# now evaluate the child
+				c1 = eval_mutate(parent_1,parent_2,c1,max_boys)
+				c2 = eval_mutate(parent_1,parent_2,c2,max_boys)
+				# More log stuff here
+				population[x] = c1
+				population[y] = c2
+				# then replace our parents
+				
 
-		# Use these two for mutations!
-		for k in range(0,1000):
-			temp = State(n=n,val=reproduce(strongest_1.state,strongest_2.state))
-			temp = eval_mutate(strongest_1,strongest_2,temp,max_boys)
-			# see if its a solution
-			unique = True
-			if(child.fit == max_boys):
-				# add the guy
-				for q in range(len(solutions)):
-					state = solutions[q]
-					if(compare_state(child.state,state)):
-						unique = False
-				if(unique):
-					solutions.append(child.state)
-					print('{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state))
-					log_.write('{}/{} FOUND SOLUTION: {}\n'.format(len(solutions),total_sols[n-1],state))
-			i += 1
-			del temp # this guy does not get added however
+				# check if this guy is a solution
+				#
+				if(c1.fit == max_boys):
+					if(is_solution(c1.state,solutions,max_boys)):
+						solutions.append(c1.state)
+						print(' ')# formatting
+						elapsed_time = time.time() - start_time
+						print_board(make_space(c1.state))
+						out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c1.state)
+						print(out)
+						print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+						log_.write(out + '\n')
+						#log_.flush()
 
-		# States that are unfit will be killed to preserve a survival of the fittest style.
-		# Here parents that have a fitness that is too low will be killed
-		best_child  = population[0].fit
-		worst_child = population[0].fit
-		gen += 1
-		
+				if(c2.fit == max_boys):
+					if(is_solution(c2.state,solutions,max_boys)):
+						solutions.append(c2.state)
+						print(' ') # formatting 
+						elapsed_time = time.time() - start_time
+						print_board(make_space(c2.state))
+						out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c2.state)
+						print(out)
+						print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+						log_.write(out + '\n')
+						#log_.flush()
 
-	# after finding solutions write them to a file
-	with open('solutions.txt', 'w') as file:
-		for sol in solutions:
-			file.write('{}\n'.format(sol))
-		file.close()
 
-	log_.write('DONE\n')
-	#state_log.write('DONE\n')
-	print('DONE!')
-	elapsed_time = time.time() - start_time
-	print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-	log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-	log_.close()
-	#state_log.close()#'''
+				# add our variables
+				total_states += 2
+				i += 1
+				spinner.next() # moved this guy here
+			# now see if the child is a solution
+			gen_size = len(population)
+			gen += 1
+			
+
+		# after finding solutions write them to a file
+		with open('solutions.txt', 'w') as file:
+			for sol in solutions:
+				file.write('{}\n'.format(sol))
+			file.close()
+
+		log_.write('DONE\n')
+		#state_log.write('DONE\n')
+		print('DONE!')
+		elapsed_time = time.time() - start_time
+		print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+		log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		log_.write('Total Iterations {}\n'.format(i))
+		log_.close()
 
