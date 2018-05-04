@@ -298,6 +298,39 @@ def three_way_tournament(a,b):
 
 	return child
 
+def get_two_three_way_crossover(a,b):
+	if(len(a) != len(b)):
+		print('error: states are not the same size!')
+		return
+	
+	n = len(a)
+	child_1 = [-1 for x in range(n)] # make the child
+	child_2 = [-1 for x in range(n)]
+	nums  = []
+
+	# See where the parents are equal, else add to the domain
+	for i in range(n):
+		if(a[i] == b[i]):
+			child_1[i] = a[i]
+			child_2[i] = a[i]
+		else:
+			nums.append(a[i])
+			nums.append(b[i])
+
+
+	# now fill in the rest
+	for i in range(n):
+		if(child_1[i] == -1):
+			idx_1 = (r.randint(0,len(nums))) - 1
+			child_1[i] = nums[idx_1]
+			del nums[idx_1] # remove for the nums list for uniqueness
+			idx_2 = (r.randint(0,len(nums))) - 1
+			child_2[i] = nums[idx_2]
+			del nums[idx_2]
+
+
+	return child_1,child_2
+
 # one point crossover
 def one_point_crossover(a,b):
 	if(len(a) != len(b)):
@@ -317,13 +350,18 @@ def one_point_crossover(a,b):
 
 # simple three way tournament crossover
 #  Try it with another way?
-def reproduce(a,b):
+def reproduce(a,b,cross):
 	if(len(a) != len(b)):
 		print('error: states are not the same size!')
 		return
+	# single boy
+	#s1,s2 = one_point_crossover(a,b)
 	# three way tournament
-	child = three_way_tournament(a,b)
-	return child
+	if(cross == 0):
+		s1,s2 = get_two_three_way_crossover(a,b)
+	else:
+		s1,s2 = one_point_crossover(a,b)
+	return s1,s2
 
 
 # These also might change if we don't find children
@@ -396,6 +434,8 @@ if __name__ == '__main__':
 	n = int(n)
 	pop = input('input pop -> ')
 	pop = int(pop)
+	cross = input('Crossover Type (0 or 1) -> ')
+	cross = int(cross)
 	
 	try:
 		os.mkdir('logs/state_logs')
@@ -412,7 +452,10 @@ if __name__ == '__main__':
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
 	# make our log save folder
-	folder = ('logs/n_{}_{}'.format(n,pop))
+	if(cross == 0):
+		folder = ('logs/three_n_{}_{}'.format(n,pop))
+	else:
+		folder = ('logs/n_{}_{}'.format(n,pop))
 	try:
 		os.mkdir(folder)
 	except Exception as e:
@@ -484,7 +527,7 @@ if __name__ == '__main__':
 						parent_1 = population[x]
 						parent_2 = population[y]
 
-						s1,s2 = one_point_crossover(parent_1.state,parent_2.state)
+						s1,s2 = reproduce(parent_1.state,parent_2.state,cross)
 						c1 = State(n=n,val=s1)
 						c2 = State(n=n,val=s2)
 						# now evaluate the child

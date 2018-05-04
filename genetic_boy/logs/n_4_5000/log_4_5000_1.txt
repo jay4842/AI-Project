@@ -1,0 +1,6 @@
+Evaluating initial population...
+1/2 FOUND SOLUTION AT ITERATION 297: [2, 0, 3, 1]
+2/2 FOUND SOLUTION AT ITERATION 674: [1, 3, 0, 2]
+DONE
+Time Elapsed: 00:00:00
+Total Iterations 5000
