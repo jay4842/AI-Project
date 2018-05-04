@@ -396,142 +396,161 @@ if __name__ == '__main__':
 	n = int(n)
 	pop = input('input pop -> ')
 	pop = int(pop)
-	start_time = time.time()
-	end_time = start_time + 60 * max_seconds
-	make_dir('state_logs/')
-	child_limit = 7
-	#n = 7
-	max_boys = max_clash(n)
-	chance = 65
-	fit_thresh = max_boys - (max_boys/2)
-	i = 0
-	gen = 0
-	solutions = []
-	pop_size = pop
-	#state_log = open('state_logs/initial_state_log.txt','w')
-	population = generate_pop(pop=pop_size,n=n)
-	max_child = pop_size
+	
+	try:
+		os.mkdir('logs/state_logs')
+	except Exception as e:
+		print(e)
 	# 92
 	
 	# print_board(make_space(population[0].state))
 	# print(check_clashes(population[0].state))
-	
-	print(len(solutions))
 	debug = True
 
 	# open our log
 	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
-	with open('logs/log.txt','w') as log_:
-		log_.write('Evaluating initial population...\n')
-		for q in range(len(population)):
-			state = population[q].state
-			unique = True
-			fit = population[q].fit
+	# make our log save folder
+	folder = ('logs/n_{}_{}'.format(n,pop))
+	try:
+		os.mkdir(folder)
+	except Exception as e:
+		print(e)
+	for e in range(0,5):
+		try:
+			start_time = time.time()
+			end_time = start_time + 60 * max_seconds
+			print('TEST {}'.format(e+1))
+			child_limit = 7
+			#n = 7
+			max_boys = max_clash(n)
+			chance = 65
+			fit_thresh = max_boys - (max_boys/2)
+			i = 0
+			gen = 0
+			solutions = []
+			pop_size = pop
+			#state_log = open('state_logs/initial_state_log.txt','w')
+			population = generate_pop(pop=pop_size,n=n)
+			max_child = pop_size
+			print('size of solutions = {}'.format(len(solutions)))
+			with open('{}/log_{}_{}_{}.txt'.format(folder,n,pop_size,e),'w') as log_:
+				log_.write('Evaluating initial population...\n')
+				for q in range(len(population)):
+					state = population[q].state
+					unique = True
+					fit = population[q].fit
 
-			if(fit == max_boys):
-				if(is_solution(state,solutions,max_boys)):
-					solutions.append(state)
+					if(fit == max_boys):
+						if(is_solution(state,solutions,max_boys)):
+							solutions.append(state)
+							elapsed_time = time.time() - start_time
+							print_board(make_space(state))
+							out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state)
+							print(out)
+							print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+							log_.write(out + '\n')
+							#log_.flush()
+
+					spinner.next()
+					i += 1
+				# now check for duplicates
+				spinner = Spinner('working ')
+				total_states = len(population)
+				gen_size = len(population)
+				#state_log.close()
+				# START MAKING NEW GENERATIONS
+				while(len(solutions) != total_sols[n-1]):
 					elapsed_time = time.time() - start_time
-					print_board(make_space(state))
-					out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,state)
-					print(out)
-					print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-					log_.write(out + '\n')
-					#log_.flush()
+					if(gen % 10 == 0):
+						#print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(gen, total_states))
+						#print(' SIZE OF GENERATION: {}'.format(gen_size))
+						#print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+						#print('-----------------------------------------------------------------')
 
-			spinner.next()
-			i += 1
-		# now check for duplicates
-		spinner = Spinner('working ')
-		total_states = len(population)
-		gen_size = len(population)
-		#state_log.close()
-		# START MAKING NEW GENERATIONS
-		while(len(solutions) != total_sols[n-1]):
-			elapsed_time = time.time() - start_time
-			if(gen % 10 == 0):
-				#print(' GENERATION: {} TOTAL STATES CREATED: {}'.format(gen, total_states))
-				#print(' SIZE OF GENERATION: {}'.format(gen_size))
-				#print(' Time Elapsed: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-				#print('-----------------------------------------------------------------')
+						# life will get harder
+						if(gen > 0 and fit_thresh > max_boys-3):
+							fit_thresh -= 1
+					new_pop = []
+					
+					#print('----- NEXT GENERATION -----')
+					# SHUFFLE OUR POPULATION
+					r.shuffle(population) # better random selection
+					for u in range(max_child): # now to generate the guys
+						#print('pop {}'.format(len(population)))
+						x, y = get_two(population,fit_thresh) # can also delete unfit parents
+						#
+						parent_1 = population[x]
+						parent_2 = population[y]
 
-				# life will get harder
-				if(gen > 0 and fit_thresh > max_boys-3):
-					fit_thresh -= 1
-			new_pop = []
-			
-			#print('----- NEXT GENERATION -----')
-			# SHUFFLE OUR POPULATION
-			r.shuffle(population) # better random selection
-			for u in range(max_child): # now to generate the guys
-				#print('pop {}'.format(len(population)))
-				x, y = get_two(population,fit_thresh) # can also delete unfit parents
-				#
-				parent_1 = population[x]
-				parent_2 = population[y]
+						s1,s2 = one_point_crossover(parent_1.state,parent_2.state)
+						c1 = State(n=n,val=s1)
+						c2 = State(n=n,val=s2)
+						# now evaluate the child
+						c1 = eval_mutate(parent_1,parent_2,c1,max_boys)
+						c2 = eval_mutate(parent_1,parent_2,c2,max_boys)
+						# More log stuff here
+						population[x] = c1
+						population[y] = c2
+						# then replace our parents
+						
 
-				s1,s2 = one_point_crossover(parent_1.state,parent_2.state)
-				c1 = State(n=n,val=s1)
-				c2 = State(n=n,val=s2)
-				# now evaluate the child
-				c1 = eval_mutate(parent_1,parent_2,c1,max_boys)
-				c2 = eval_mutate(parent_1,parent_2,c2,max_boys)
-				# More log stuff here
-				population[x] = c1
-				population[y] = c2
-				# then replace our parents
-				
+						# check if this guy is a solution
+						#
+						if(c1.fit == max_boys):
+							if(is_solution(c1.state,solutions,max_boys)):
+								solutions.append(c1.state)
+								print(' ')# formatting
+								elapsed_time = time.time() - start_time
+								print_board(make_space(c1.state))
+								out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c1.state)
+								print(out)
+								print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+								log_.write(out + '\n')
+								#log_.flush()
 
-				# check if this guy is a solution
-				#
-				if(c1.fit == max_boys):
-					if(is_solution(c1.state,solutions,max_boys)):
-						solutions.append(c1.state)
-						print(' ')# formatting
-						elapsed_time = time.time() - start_time
-						print_board(make_space(c1.state))
-						out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c1.state)
-						print(out)
-						print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-						log_.write(out + '\n')
-						#log_.flush()
-
-				if(c2.fit == max_boys):
-					if(is_solution(c2.state,solutions,max_boys)):
-						solutions.append(c2.state)
-						print(' ') # formatting 
-						elapsed_time = time.time() - start_time
-						print_board(make_space(c2.state))
-						out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c2.state)
-						print(out)
-						print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-						log_.write(out + '\n')
-						#log_.flush()
+						if(c2.fit == max_boys):
+							if(is_solution(c2.state,solutions,max_boys)):
+								solutions.append(c2.state)
+								print(' ') # formatting 
+								elapsed_time = time.time() - start_time
+								print_board(make_space(c2.state))
+								out = '{}/{} FOUND SOLUTION AT ITERATION {}: {}'.format(len(solutions),total_sols[n-1],i,c2.state)
+								print(out)
+								print(' Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+								log_.write(out + '\n')
+								#log_.flush()
 
 
-				# add our variables
-				total_states += 2
-				i += 1
-				spinner.next() # moved this guy here
-			# now see if the child is a solution
-			gen_size = len(population)
-			gen += 1
-			
+						# add our variables
+						total_states += 2
+						i += 1
+						spinner.next() # moved this guy here
+					# now see if the child is a solution
+					gen_size = len(population)
+					gen += 1
+					
 
-		# after finding solutions write them to a file
-		with open('logs/solutions.txt', 'w') as file:
-			for sol in solutions:
-				file.write('{}\n'.format(sol))
-			file.close()
+				# after finding solutions write them to a file
+				with open('logs/solutions.txt', 'w') as file:
+					for sol in solutions:
+						file.write('{}\n'.format(sol))
+					file.close()
 
-		log_.write('DONE\n')
-		#state_log.write('DONE\n')
-		print('DONE!')
-		elapsed_time = time.time() - start_time
-		print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-		log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-		log_.write('Total Iterations {}\n'.format(i))
-		log_.close()
+				log_.write('DONE\n')
+				#state_log.write('DONE\n')
+				print('DONE!')
+				elapsed_time = time.time() - start_time
+				print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+				log_.write('Time Elapsed: {}\n'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+				log_.write('Total Iterations {}\n'.format(i))
+				log_.close()
+
+			# garbage collection help
+			del solutions
+			del population
+		except KeyboardInterrupt as e:
+			log_.write('KeyboardInterrupt\n')
+			log_.close()
 
