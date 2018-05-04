@@ -406,7 +406,7 @@ if __name__ == '__main__':
 	worst_child = population[0].fit
 	# open our log
 	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
-	log_ = open('log_.txt','w')
+	log_ = open('logs/log_.txt','w')
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
 	log_.write('Evaluating initial population...\n')
@@ -549,7 +549,7 @@ if __name__ == '__main__':
 		
 
 	# after finding solutions write them to a file
-	with open('solutions.txt', 'w') as file:
+	with open('logs/solutions.txt', 'w') as file:
 		for sol in solutions:
 			file.write('{}\n'.format(sol))
 		file.close()

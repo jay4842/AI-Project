@@ -423,7 +423,7 @@ if __name__ == '__main__':
 	# COMMENT OUT THE PRINT STUFF IF YOU DONT WANT TO SEE IT
 	# first eval population
 	spinner = Spinner('') # EVALUATE INITIAL POPULATION
-	with open('state_logs/log.txt','w') as log_:
+	with open('logs/log.txt','w') as log_:
 		log_.write('Evaluating initial population...\n')
 		for q in range(len(population)):
 			state = population[q].state
@@ -521,7 +521,7 @@ if __name__ == '__main__':
 			
 
 		# after finding solutions write them to a file
-		with open('solutions.txt', 'w') as file:
+		with open('logs/solutions.txt', 'w') as file:
 			for sol in solutions:
 				file.write('{}\n'.format(sol))
 			file.close()
