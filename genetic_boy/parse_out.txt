@@ -1,0 +1,156 @@
+Three way crossover
+N = 4  POP = 100
+Over_all = 240
+last_its = 189
+-----------------------
+Three way crossover
+N = 4  POP = 1000
+Over_all = 1000
+last_its = 387
+-----------------------
+Three way crossover
+N = 4  POP = 10000
+Over_all = 10000
+last_its = 322
+-----------------------
+Three way crossover
+N = 4  POP = 5000
+Over_all = 5000
+last_its = 403
+-----------------------
+Three way crossover
+N = 5  POP = 100
+Over_all = 2400
+last_its = 2360
+-----------------------
+Three way crossover
+N = 5  POP = 1000
+Over_all = 4200
+last_its = 3614
+-----------------------
+Three way crossover
+N = 5  POP = 10000
+Over_all = 12000
+last_its = 8561
+-----------------------
+Three way crossover
+N = 5  POP = 5000
+Over_all = 10000
+last_its = 6727
+-----------------------
+Three way crossover
+N = 6  POP = 100
+Over_all = 41700
+last_its = 41647
+-----------------------
+Three way crossover
+N = 6  POP = 1000
+Over_all = 31600
+last_its = 31300
+-----------------------
+Three way crossover
+N = 6  POP = 10000
+Over_all = 48000
+last_its = 44752
+-----------------------
+Three way crossover
+N = 6  POP = 500
+Over_all = 26700
+last_its = 26437
+-----------------------
+Three way crossover
+N = 6  POP = 5000
+Over_all = 34000
+last_its = 30787
+-----------------------
+Three way crossover
+N = 7  POP = 1000
+Over_all = 1119800
+last_its = 1119314
+-----------------------
+Three way crossover
+N = 7  POP = 10000
+Over_all = 1108000
+last_its = 1105496
+-----------------------
+Three way crossover
+N = 7  POP = 5000
+Over_all = 1441000
+last_its = 1439198
+-----------------------
+/ / / / / / / / / / / / / / / / / / / / / / / / /
+One point crossover
+N = 4  POP = 100
+Over_all = 380
+last_its = 334
+-----------------------
+One point crossover
+N = 4  POP = 1000
+Over_all = 1000
+last_its = 459
+-----------------------
+One point crossover
+N = 4  POP = 10000
+Over_all = 10000
+last_its = 448
+-----------------------
+One point crossover
+N = 4  POP = 5000
+Over_all = 5000
+last_its = 312
+-----------------------
+One point crossover
+N = 5  POP = 100
+Over_all = 16780
+last_its = 16732
+-----------------------
+One point crossover
+N = 5  POP = 1000
+Over_all = 9400
+last_its = 9161
+-----------------------
+One point crossover
+N = 5  POP = 10000
+Over_all = 12000
+last_its = 8450
+-----------------------
+One point crossover
+N = 5  POP = 5000
+Over_all = 11000
+last_its = 8091
+-----------------------
+One point crossover
+N = 6  POP = 100
+Over_all = 70700
+last_its = 70639
+-----------------------
+One point crossover
+N = 6  POP = 1000
+Over_all = 64400
+last_its = 63813
+-----------------------
+One point crossover
+N = 6  POP = 10000
+Over_all = 70000
+last_its = 65248
+-----------------------
+One point crossover
+N = 6  POP = 5000
+Over_all = 69000
+last_its = 66355
+-----------------------
+One point crossover
+N = 7  POP = 1000
+Over_all = 6314200
+last_its = 6313647
+-----------------------
+One point crossover
+N = 7  POP = 10000
+Over_all = 4816000
+last_its = 4811124
+-----------------------
+One point crossover
+N = 7  POP = 5000
+Over_all = 4210000
+last_its = 4207361
+-----------------------
