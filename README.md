@@ -1,4 +1,5 @@
 # AI-Project
+Code is under *genetic_boy*.  
 
 ## TODO
 - Program Core  
