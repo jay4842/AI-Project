@@ -428,6 +428,7 @@ def is_solution(state,solutions,max_boys):
 
 # # # # # # MAIN SECTION HERE
 if __name__ == '__main__':
+	test_mode = False
 	total_sols = [1 ,0,0,2,10,4,40,92,352,724,2680,14200,73712,365596,2279184,14772512]
 	max_seconds = 5
 	n = input('input n -> ');
@@ -460,7 +461,12 @@ if __name__ == '__main__':
 		os.mkdir(folder)
 	except Exception as e:
 		print(e)
-	for e in range(0,5):
+	
+	if(test_mode):
+		max_its = 5
+	else:
+		max_its = 1
+	for e in range(0,max_its):
 		try:
 			start_time = time.time()
 			end_time = start_time + 60 * max_seconds
