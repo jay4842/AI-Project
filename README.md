@@ -1,7 +1,8 @@
 # AI-Project
 [GitHub](https://github.com/jay4842/AI-Project)  
 Code is under *genetic_boy*.  
-
+  
+[Paper Link](https://www.overleaf.com/read/pcgwmrpzyqjd)    
 ## TODO
 - Program Core  
   - Problem Set up  
