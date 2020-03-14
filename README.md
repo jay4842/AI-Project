@@ -13,5 +13,8 @@ The requirement for this research is first to apply a modified genetic algoritm.
   
 A type of N queens problem implementation where we have modified how child states are added to the population. Along with what mutation operations are preformed as well as when they are preformed.
 
+## Using Python
+Usually you would record time, as python can be slow compared to a language such as C++, we have recored iterations instead of time.  
+  
 ## Conclusion
 The genetic algorithm is an algorithm that can be used to solve constraint problems. The N queens problem does fall under the number of problems that can be solved with this algorithm. This being said the random component is a major area of the genetic algorithm that can hinder the success of it. The way that we combated that issue was using the fitness function to reduce the complete randomness. Additionally keeping the population at a constant rate also proved a good approach to reducing the amount of memory that is consumed while the algorithm is running.
